@@ -1,10 +1,16 @@
-# Tautan CARU CEDC UNPRI
+# Dasbor Tracer Study
 
-Pemendek tautan statis untuk CARU (Career and Alumni Relations Unit) CEDC Universitas Prima Indonesia, di-host di GitHub Pages. Tanpa server dan tanpa database pihak ketiga.
+Web app CARU (Career and Alumni Relations Unit) CEDC Universitas Prima Indonesia untuk membaca data tracer study per prodi.
 
-## Menambah atau mengubah tautan
-1. Edit `links.json`. Kunci = nama tautan (huruf kecil, angka, tanda hubung), lalu isi `url`, `judul`, dan `keterangan`.
-2. Jalankan `python3 buat_link.py`. Skrip membuat folder per tautan (misalnya `tracer/index.html`), halaman daftar, dan halaman 404.
-3. Unggah perubahan ke repo. GitHub Pages memperbarui situs dalam satu sampai dua menit.
+Alamat: https://ilmanakbareffendi.github.io/dasbor-tracer-study/
 
-Judul dan keterangan muncul sebagai pratinjau saat tautan dikirim lewat WhatsApp.
+## Cara pakai
+1. Unggah file paket dari CARU (satu file), atau tiga file tarikan sistem: Download Versi 2021, Download Versi 2019, dan Download Data Mahasiswa.
+2. Klik **Gabungkan dan tampilkan** untuk melihat dasbor.
+3. Klik **Unduh Excel kompilasi** untuk memperoleh data per alumni yang sudah diterjemahkan, lengkap dengan sheet Baca Dulu.
+
+## Keamanan data
+Semua pengolahan terjadi di browser pengguna. File yang diunggah tidak dikirim atau disimpan di server mana pun, dan halaman ini tidak memuat data alumni.
+
+## Isi repo
+- `index.html`: seluruh web app dalam satu file. Pustaka SheetJS 0.18.5 dan ExcelJS 4.4.0 dimuat dari jsDelivr.
