@@ -207,6 +207,11 @@ details summary { cursor: pointer; font-weight: 700; color: var(--deep); }
 @media (max-width: 560px) { .only-wide { display: none; } .only-narrow { display: block; } }
 
 .flip .back { transform: rotateY(180deg); }
+/* sisi yang tidak menghadap pembaca disembunyikan langsung, tidak hanya mengandalkan backface-visibility (gagal di sebagian browser) */
+.flip .front { transform: rotateY(0deg); }
+.flip .face { transition: visibility 0s linear .3s; }
+.flip .back, .flip.flipped .front { visibility: hidden; }
+.flip.flipped .back { visibility: visible; }
 .flip.flipped .flip-inner { transform: rotateY(180deg); }
 .card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .info-chip { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--soft); border: 1px solid var(--line-accent); border-radius: 999px; padding: 2px 9px; white-space: nowrap; flex: none; }
@@ -221,7 +226,7 @@ details summary { cursor: pointer; font-weight: 700; color: var(--deep); }
 .comp-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; margin: 8px 0 6px; }
 .comp-bar span { display: block; height: 100%; }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-@media (prefers-reduced-motion: reduce) { .flip-inner { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .flip-inner, .flip .face { transition: none; } }
 footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
 </style>
 
