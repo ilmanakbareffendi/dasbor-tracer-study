@@ -565,7 +565,7 @@ function parseTanggal(v){
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
 }
 function periodFromName(name){
-  let m = name.match(/(\d{4}-\d{2}-\d{2})_\d{2}_\d{2}_\d{2}_\d{4}_(\d{4}-\d{2}-\d{2})/);
+  let m = name.match(/(\d{4}-\d{2}-\d{2})[\s_]\d{2}_\d{2}_\d{2}[\s_]\+?\d{4}_(\d{4}-\d{2}-\d{2})/);
   if (m) return { from: m[1], to: m[2], src: "nama file daftar pengisian dari sistem" };
   m = name.match(/(\d{4}-\d{2}-\d{2})[\s_]*(?:sd|s\.d\.?|sampai|ke)[\s_]*(\d{4}-\d{2}-\d{2})/i);
   if (m) return { from: m[1], to: m[2], src: "nama file" };
@@ -774,7 +774,7 @@ function renderCompile(){
 // Setiap temuan dihitung ulang dari data yang diunggah; temuan dengan jumlah nol tidak ditampilkan.
 const LV = { jingga: "Jingga", kuning: "Kuning", catatan: "Catatan" };
 // nama awam untuk aturan relevansi yang paling sering muncul; aturan lain memakai bunyi syaratnya
-const RULE_PLAIN = { work: "Pertanyaan khusus alumni yang bekerja, diisi juga oleh yang tidak bekerja", w19: "Pertanyaan khusus alumni yang bekerja, diisi juga oleh yang tidak bekerja", studi: "Pertanyaan studi lanjut, diisi oleh yang tidak melanjutkan studi", work_tidak: "Lama menunggu kerja lebih dari 6 bulan, diisi oleh yang menjawab mendapat kerja dalam 6 bulan", work_ya: "Lama menunggu kerja dalam 6 bulan, diisi oleh yang menjawab lebih dari 6 bulan", wira: "Pertanyaan khusus wirausaha, diisi oleh yang bukan wirausaha", cari: "Pertanyaan proses mencari kerja, diisi oleh yang tidak mencari kerja", cari19: "Pertanyaan proses mencari kerja, diisi oleh yang tidak mencari kerja" };
+const RULE_PLAIN = { work: "Pertanyaan khusus alumni yang bekerja, diisi juga oleh yang tidak bekerja", w19: "Pertanyaan khusus alumni yang bekerja, diisi juga oleh yang tidak bekerja", studi: "Pertanyaan studi lanjut, diisi oleh yang tidak melanjutkan studi", work_tidak: "Lama menunggu kerja lebih dari 6 bulan (F506), diisi oleh yang tidak bekerja atau menjawab mendapat kerja dalam 6 bulan", work_ya: "Lama mendapat kerja dalam 6 bulan (F502), diisi oleh yang tidak bekerja atau menjawab lebih dari 6 bulan", wira: "Pertanyaan khusus wirausaha, diisi oleh yang bukan wirausaha", cari: "Pertanyaan proses mencari kerja, diisi oleh yang tidak mencari kerja", cari19: "Pertanyaan proses mencari kerja, diisi oleh yang tidak mencari kerja" };
 const CAVEAT_FORCED = "Dugaan ini bisa keliru bila alumni salah memilih jawaban penentu (misalnya status di F8), atau mengisi pengalaman kerja atau studi sebelumnya. Jawaban tidak dihapus; hanya diwarnai dan tidak dihitung di dasbor.";
 function nimOf(x){ return ident(x.r.nimhsmsmh) || "-"; }
 function analyze(v, list){
@@ -787,7 +787,7 @@ function analyze(v, list){
   list.forEach((x, i) => head.forEach(col => { const sp = specFor(v, col), rid = sp[2]; if (!rid || !RULES[rid] || !RULES[rid][1]) return; const val = sp[1](x.r); if (val === null || val === undefined) return; if (RULES[rid][1](x.r)) return;
     mark(i, col, "jingga"); const b = byRule[rid] || (byRule[rid] = { cols: new Set(), n: 0, rows: new Set(), nims: [] }); b.cols.add(col); b.n++; if (!b.rows.has(i)) { b.rows.add(i); b.nims.push(nimOf(x)); } }));
   Object.keys(byRule).forEach(rid => { const b = byRule[rid], hidden = rid === "hidden", studi = rid === "studi";
-    items.push({ id: "j_" + rid, lv: hidden ? "catatan" : "jingga", title: hidden ? "Kolom yang tidak tampil di layar sistem" : RULE_PLAIN[rid] || "Isian lanjutan diisi tanpa memenuhi syarat (" + RULES[rid][0] + ")", rule: RULES[rid][0], cols: [...b.cols], n: b.n, unit: "sel", rows: b.rows.size, nims: sample(b.nims),
+    items.push({ id: "j_" + rid, lv: hidden ? "catatan" : "jingga", title: hidden ? "Kolom yang tidak tampil di layar sistem" : RULE_PLAIN[rid] || "Isian lanjutan (" + [...b.cols].join(", ").toUpperCase() + ") diisi oleh alumni yang tidak memenuhi syarat", rule: RULES[rid][0], cols: [...b.cols], n: b.n, unit: "sel", rows: b.rows.size, nims: sample(b.nims),
       why: hidden ? "Kolom ini tidak tampil di layar sistem dan nilainya selalu 5 untuk semua alumni." : "Pertanyaan di kolom ini hanya berlaku bila " + RULES[rid][0] + ". Sistem mewajibkan semua pertanyaan diisi, sehingga jawaban dari alumni di luar syarat itu kemungkinan terisi paksa.",
       caveat: hidden ? "Tidak ada; kolom diabaikan di dasbor." : studi ? "Bisa keliru bila alumni kuliah lanjut sambil bekerja tetapi memilih Bekerja di F8; dalam kasus itu isian studi lanjutnya justru benar. " + CAVEAT_FORCED : CAVEAT_FORCED }); });
   // 2) KUNING: jawaban bertentangan atau tidak sah
@@ -1403,8 +1403,8 @@ async function buildExcel(){
   VS.forEach(v => { const n = c.headers[v].length; sheetsDesc.push(["Data Terbaca " + v.slice(1), "Kolom A sampai " + letter(n) + " sama persis dengan file tarikan sistem, kodenya sudah diterjemahkan. Baris 1 sampai 2 judul dan legenda, baris 3 kode kolom asli, baris 4 pertanyaan, data mulai baris 5. Kolom tambahan " + letter(n + 1) + " sampai " + letter(n + EXTRA_COLS.length) + ": " + EXTRA_COLS.map(e => e[0]).join(", ") + "."]); });
   VS.forEach(v => { if (dropOf(v).length) sheetsDesc.push(["NIM Ganda " + v.slice(1), "Isian dari NIM yang sama yang tidak dipakai."]); });
   VS.forEach(v => sheetsDesc.push(["Panduan Kode " + v.slice(1), "Arti setiap kode, syarat jawaban relevan, dan status verifikasi."]));
-  VS.forEach(v => sheetsDesc.push(["Data Asli " + v.slice(1), "Isi file tarikan apa adanya, tanpa terjemahan."]));
-  if (c.hasDaftar) sheetsDesc.push(["Data Asli Daftar Pengisian", "Isi file Download Data Mahasiswa apa adanya."]);
+  VS.forEach(v => sheetsDesc.push(["Data Asli " + v.slice(1), "Isi file tarikan apa adanya, tanpa terjemahan. Dua kolom terakhir (file_sumber, periode) ditambahkan web app."]));
+  if (c.hasDaftar) sheetsDesc.push(["Data Asli Daftar Pengisian", "Isi file Download Data Mahasiswa apa adanya. Dua kolom terakhir (file_sumber, periode) ditambahkan web app."]);
   sheetsDesc.forEach(([k, v]) => kv(k, v));
 
   /* ---------- Ringkas ---------- */
