@@ -827,10 +827,11 @@ function analyze(v, list){
     "Data yang sama di dua tempat seharusnya identik.",
     "Salah satu sumber mungkin diperbarui belakangan. Dasbor memakai tahun lulus dari file kuesioner; pastikan di data akademik.",
     x => x.d && x.d.tahunLulus != null && x.m.tahun != null && x.d.tahunLulus !== x.m.tahun ? "Tahun lulus di daftar pengisian: " + x.d.tahunLulus : false);
-  K("k_lama_studi", "Lama studi tidak wajar (kurang dari 3 tahun atau lebih dari 7 tahun)", ["tahun_lulus"],
-    "Dihitung dari tahun masuk (daftar pengisian) sampai tahun lulus. Program sarjana umumnya ditempuh 3,5 sampai 7 tahun.",
+  const J = jenjang();
+  K("k_lama_studi", "Lama studi tidak wajar untuk jenjang " + J.k + " (kurang dari " + J.lo + " tahun atau lebih dari " + J.hi + " tahun)", ["tahun_lulus"],
+    "Dihitung dari tahun masuk (daftar pengisian) sampai tahun lulus. " + J.prog,
     "Wajar untuk mahasiswa pindahan, alih jenjang, atau rekognisi pembelajaran lampau (RPL). Perlu dicek di data akademik.",
-    x => x.m.lamaStudi != null && (x.m.lamaStudi < 3 || x.m.lamaStudi > 7) ? "Lama studi " + x.m.lamaStudi + " tahun (masuk " + x.m.tahunMasuk + ", lulus " + x.m.tahun + ")" : false);
+    x => x.m.lamaStudi != null && (x.m.lamaStudi < J.lo || x.m.lamaStudi > J.hi) ? "Lama studi " + x.m.lamaStudi + " tahun (masuk " + x.m.tahunMasuk + ", lulus " + x.m.tahun + ")" : false);
   // 3) CATATAN tingkat kolom atau baris
   const C = (id, title, n, unit, cols, why, caveat, nims) => { if (n) items.push({ id, lv: "catatan", title, n, unit, cols, rows: n, nims: nims || "", why, caveat }); };
   const flat = (V => V.f17.flatMap(([a, b]) => [a, b]))(VERSIONS[v]).filter(col => { const vals = list.map(x => num(x.r[col])).filter(q => q !== null); return vals.length >= 10 && vals.every(q => q === vals[0]); });
@@ -1151,7 +1152,7 @@ function renderDash(){
   html += qsec("Apakah pekerjaannya sesuai bidang studi?", [
     card({ ppt: { t: "stack", rows: f14, series: Object.values(F14), colors: C5 }, q: "Keterkaitan pekerjaan dengan bidang studi · " + fmt(f14t) + " alumni yang bekerja", title: fpct(f14e, f14t) + " menilai pekerjaannya erat atau sangat erat dengan bidang studi", body: stackRows(f14, Object.values(F14).map((l, i) => ({ label: l, color: C5[i] }))),
       back: [["Pertanyaan", "F14: Seberapa erat hubungan antara bidang studi dengan pekerjaan Anda?"], ["Basis", "Hanya alumni yang bekerja atau berwirausaha."], ["Pengelompokan", grpNote], ["Tanda arsir", "Baris bergaris = angkatan yang mengisi sebelum wisuda."]] }),
-    card({ ppt: { t: "stack", rows: f15, series: Object.values(F15), colors: ["var(--c2)", "var(--c1)", "var(--neg)", "var(--neg2)"] }, q: "Kesesuaian tingkat pendidikan dengan pekerjaan · " + fmt(f15t) + " alumni yang bekerja", title: fpct(f15[0].counts[1], f15t) + " bekerja di posisi yang sesuai untuk lulusan sarjana", body: stackRows(f15, Object.values(F15).map((l, i) => ({ label: l, color: ["var(--c2)", "var(--c1)", "var(--neg)", "var(--neg2)"][i] }))),
+    card({ ppt: { t: "stack", rows: f15, series: Object.values(F15), colors: ["var(--c2)", "var(--c1)", "var(--neg)", "var(--neg2)"] }, q: "Kesesuaian tingkat pendidikan dengan pekerjaan · " + fmt(f15t) + " alumni yang bekerja", title: fpct(f15[0].counts[1], f15t) + " bekerja di posisi yang sesuai untuk lulusan " + jenjang().lulusan, body: stackRows(f15, Object.values(F15).map((l, i) => ({ label: l, color: ["var(--c2)", "var(--c1)", "var(--neg)", "var(--neg2)"][i] }))),
       back: [["Pertanyaan", "F15: Tingkat pendidikan apa yang paling tepat/sesuai untuk pekerjaan Anda saat ini?"], ["Basis", "Hanya alumni yang bekerja atau berwirausaha."], ["Pengelompokan", grpNote]] })
   ]);
 
@@ -1334,6 +1335,16 @@ function panduan(v){
   return rows;
 }
 const EXTRA_COLS = [["file_sumber", "Kolom tambahan: file tarikan asal baris", 26], ["periode", "Kolom tambahan: periode pengisian tarikan asal baris", 24], ["waktu_isian", "Kolom tambahan: diisi sebelum wisuda atau setelah lulus", 20], ["status_nim", "Kolom tambahan: status NIM (tunggal atau ganda)", 34], ["tahun_masuk", "Kolom tambahan: tahun masuk (dari daftar pengisian)", 12], ["tanggal_pengisian", "Kolom tambahan: tanggal pengisian kuesioner (dari daftar pengisian)", 14], ["lama_studi", "Kolom tambahan: lama studi dalam tahun (tahun lulus dikurangi tahun masuk)", 12], ["jarak_isi", "Kolom tambahan: tahun pengisian dikurangi tahun lulus (0 = di tahun kelulusan)", 12], ["status_daftar", "Kolom tambahan: ada atau tidak di daftar pengisian periode ini", 26]];
+// jenjang prodi dibaca dari nama prodi (daftar pengisian atau katalog); menentukan batas lama studi dan kata "lulusan ..." di dasbor
+function jenjang(){
+  const c = state.compiled || {}, n = String(c.prodiNama || PRODI_DYN[c.prodi] || PRODI[c.prodi] || "").trim();
+  if (/^(Magister|S2)\b/i.test(n)) return { k: "S2", lo: 1, hi: 4, lulusan: "magister", prog: "Program magister umumnya ditempuh 1,5 sampai 4 tahun." };
+  if (/^(Doktor|S3)\b/i.test(n)) return { k: "S3", lo: 2, hi: 7, lulusan: "doktor", prog: "Program doktor umumnya ditempuh 3 sampai 7 tahun." };
+  if (/^Spesialis/i.test(n)) return { k: "spesialis", lo: 3, hi: 7, lulusan: "dokter spesialis", prog: "Program spesialis umumnya ditempuh 4 sampai 6 tahun." };
+  if (/^(Profesi|Pendidikan Profesi)/i.test(n)) return { k: "profesi", lo: 1, hi: 4, lulusan: "profesi", prog: "Program profesi umumnya ditempuh 1 sampai 3 tahun." };
+  if (/^(Sarjana Terapan|D4)\b/i.test(n)) return { k: "D4", lo: 3, hi: 7, lulusan: "sarjana terapan", prog: "Program sarjana terapan umumnya ditempuh 3,5 sampai 7 tahun." };
+  return { k: "S1", lo: 3, hi: 7, lulusan: "sarjana", prog: "Program sarjana umumnya ditempuh 3,5 sampai 7 tahun." };
+}
 function prodiShortOf(c){ return PRODI_DYN[c.prodi] || PRODI[c.prodi] || (c.prodiNama ? shortProdi(c.prodiNama) : "Prodi " + c.prodi); }
 function excelFileName(c){
   const per = c.period ? fmtTgl(c.period.from) + " sd " + fmtTgl(c.period.to) : [...new Set(c.files.map(f => f.periode))].join("-");
