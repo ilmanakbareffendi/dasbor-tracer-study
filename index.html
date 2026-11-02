@@ -30,7 +30,7 @@
 }
 html { color-scheme: light only; }
 * { box-sizing: border-box; }
-body { background: var(--paper); color: var(--ink2); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+body { background: radial-gradient(900px 520px at 88% -6%, rgba(74,222,128,.20), rgba(74,222,128,0) 62%), radial-gradient(760px 480px at -8% 18%, rgba(21,128,61,.09), rgba(21,128,61,0) 60%), linear-gradient(180deg, #EEF8F1 0%, var(--paper) 520px) no-repeat, var(--paper); color: var(--ink2); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
 .wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 64px; display: grid; gap: 32px; }
 h1, h2, h3 { font-family: var(--f-display); color: var(--ink); text-wrap: balance; margin: 0; }
 h2 { font-size: 22px; font-weight: 700; }
@@ -42,18 +42,18 @@ p { margin: 0; }
 .kop strong { color: var(--deep); font-family: var(--f-display); font-weight: 700; letter-spacing: .02em; }
 .topnav { display: flex; align-items: center; gap: 14px 24px; flex-wrap: wrap; padding: 4px 0 14px; border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; margin-right: auto; min-width: 0; }
-.brand img { width: 46px; height: auto; flex-shrink: 0; }
-.brand-txt { display: grid; gap: 2px; min-width: 0; }
-.brand-txt b { font-family: var(--f-display); font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
-.brand-txt em { font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--deep); border-radius: 7px; padding: 3px 8px; }
-.brand-txt small { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.brand img { width: 54px; height: auto; flex-shrink: 0; }
+.brand-txt { display: grid; gap: 1px; min-width: 0; line-height: 1.15; }
+.brand-txt b { font-family: var(--f-display); font-size: 23px; font-weight: 800; color: var(--deep); letter-spacing: -.01em; }
+.brand-txt span { font-family: var(--f-body); font-size: 15px; font-weight: 700; color: var(--accent); }
+.brand-txt small { font-size: 11.5px; color: var(--muted); }
 .tn-tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px; }
 .tn { background: none; border: 0; border-radius: 10px; padding: 9px 16px; font-size: 14.5px; font-weight: 700; color: var(--muted); }
 .tn:hover { color: var(--deep); }
 .tn.on { background: var(--soft); color: var(--deep); box-shadow: inset 0 0 0 1px var(--line-accent); }
 .tn-cta { text-decoration: none; font-weight: 700; font-size: 14.5px; color: #fff; background: var(--deep); border-radius: 12px; padding: 10px 18px; }
 .tn-cta:hover { background: var(--accent); }
-@media (max-width: 720px) { .topnav { gap: 10px; } .brand-txt b { font-size: 18px; } .brand-txt small { font-size: 10.5px; } .tn-tabs { flex: 1; } .tn { flex: 1; padding: 8px 10px; } .tn-cta { padding: 9px 14px; } }
+@media (max-width: 720px) { .topnav { gap: 10px; } .brand img { width: 44px; } .brand-txt b { font-size: 19px; } .brand-txt span { font-size: 13px; } .brand-txt small { font-size: 10.5px; } .tn-tabs { flex: 1; } .tn { flex: 1; padding: 8px 10px; } .tn-cta { padding: 9px 14px; } }
 .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 32px; align-items: center; padding-block: 24px 8px; position: relative; }
 .hero::before { content: ""; position: absolute; inset: -24px 0 auto auto; width: min(520px, 60%); height: 360px; background: radial-gradient(closest-side, rgba(74,222,128,.18), transparent); pointer-events: none; z-index: -1; }
 .hero-main { display: grid; gap: 18px; align-content: center; min-width: 0; }
@@ -63,20 +63,21 @@ p { margin: 0; }
 .hero-meta { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--muted); }
 .hero-meta li { display: inline-flex; align-items: center; gap: 7px; }
 .hero-meta li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--light); }
-.hero-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: grid; gap: 14px; box-shadow: 0 18px 40px -22px rgba(20,83,45,.35); position: relative; overflow: hidden; min-width: 0; }
+.hero-card { background: radial-gradient(420px 260px at 100% 0%, rgba(74,222,128,.22), rgba(74,222,128,0) 70%), linear-gradient(165deg, #FFFFFF 0%, #F6FCF8 55%, #EAF8EF 100%); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: grid; gap: 14px; box-shadow: 0 18px 40px -22px rgba(20,83,45,.35); position: relative; overflow: hidden; min-width: 0; }
 .hero-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--deep), var(--accent), var(--light)); }
 .hc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .hc-head h2 { font-size: 19px; }
 .hc-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .hc-tag { font-size: 12px; font-weight: 700; color: var(--deep); background: var(--soft); border: 1px solid var(--line-accent); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
 .hc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.hc-list li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.hc-list li { background: rgba(255,255,255,.82); display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
 .hc-list b { display: block; font-family: var(--f-display); font-size: 15.5px; color: var(--ink); }
 .hc-list span:not(.hc-ico) { font-size: 13px; color: var(--muted); line-height: 1.45; }
 .hc-ico { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-family: var(--f-display); font-weight: 800; font-size: 13px; letter-spacing: .02em; }
-.hc-ico.i1 { background: linear-gradient(135deg, #14532D, #15803D); }
-.hc-ico.i2 { background: linear-gradient(135deg, #15803D, #16A34A); }
-.hc-ico.i3 { background: linear-gradient(135deg, #166534, #0F766E); }
+.hc-ico svg { width: 28px; height: 28px; }
+.hc-ico.i1 { background: linear-gradient(135deg, #14532D, #16A34A); }
+.hc-ico.i2 { background: linear-gradient(135deg, #C2410C, #F97316); }
+.hc-ico.i3 { background: linear-gradient(135deg, #166534, #22C55E); }
 .hc-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--muted); padding-top: 4px; border-top: 1px solid var(--line); }
 .hc-foot b { color: var(--accent); }
 .flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; counter-reset: none; }
@@ -386,7 +387,7 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
   <nav class="topnav" aria-label="Navigasi utama">
     <a class="brand" href="#" data-home aria-label="Beranda Dasbor Tracer Study">
       <img id="brandLogo" alt="" width="46" height="39">
-      <span class="brand-txt"><b>Tracer Study <em>Dasbor</em></b><small>CEDC UNPRI · Career and Alumni Relations Unit</small></span>
+      <span class="brand-txt"><b>CEDC UNPRI</b><span>Career and Alumni Relations Unit</span><small>Career, Entrepreneurship, and Development Center</small></span>
     </a>
     <div class="tn-tabs">
       <button class="tn on" type="button" data-home id="tnHome">Beranda</button>
@@ -415,9 +416,9 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
     <aside class="hero-card" aria-labelledby="h-out">
       <div class="hc-head"><div><h2 id="h-out">Yang Anda dapatkan</h2><p>Dari satu kali unggah</p></div><span class="hc-tag">3 keluaran</span></div>
       <ul class="hc-list">
-        <li><span class="hc-ico i1" aria-hidden="true">TS</span><div><b>Data Tracer Study</b><span>Dasbor status kerja, masa tunggu, keselarasan, dan kompetensi alumni.</span></div></li>
-        <li><span class="hc-ico i2" aria-hidden="true">PPT</span><div><b>PPT Stakeholders</b><span>Laporan siap presentasi untuk pimpinan, rektorat, dan asesor.</span></div></li>
-        <li><span class="hc-ico i3" aria-hidden="true">XLS</span><div><b>Excel Kompilasi</b><span>Data per alumni, temuan untuk dikonfirmasi, dan panduan kode.</span></div></li>
+        <li><span class="hc-ico i1" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="12" width="3.6" height="8" rx="1" fill="#fff" opacity=".7"/><rect x="10.2" y="7" width="3.6" height="13" rx="1" fill="#fff"/><rect x="16.4" y="10" width="3.6" height="10" rx="1" fill="#fff" opacity=".85"/><path d="M3.5 6.5 8.5 4l4 2 7-3.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Data Tracer Study</b><span>Dasbor status kerja, masa tunggu, keselarasan, dan kompetensi alumni.</span></div></li>
+        <li><span class="hc-ico i2" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12.5" rx="2" fill="#fff"/><path d="M12 16.5V20m-3.5 0h7" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="10.2" r="3" fill="#EA580C"/><path d="M9 7.2v3h3" fill="#FDBA74"/><path d="M14 8.5h4.5M14 11h4.5M14 13.5h3" stroke="#C2410C" stroke-width="1.3" stroke-linecap="round"/></svg></span><div><b>PPT Stakeholders</b><span>Laporan siap presentasi untuk pimpinan, rektorat, dan asesor.</span></div></li>
+        <li><span class="hc-ico i3" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2.2" fill="#fff"/><path d="M3.5 8.5h17M3.5 12.5h17M3.5 16.5h17M9 3.5v17M14.8 3.5v17" stroke="#15803D" stroke-width="1.2"/><rect x="3.5" y="3.5" width="17" height="5" rx="2.2" fill="#BBF7D0" opacity=".9"/><path d="M3.5 8.5h17" stroke="#15803D" stroke-width="1.2"/></svg></span><div><b>Excel Kompilasi</b><span>Data per alumni, temuan untuk dikonfirmasi, dan panduan kode.</span></div></li>
       </ul>
       <div class="hc-foot"><span>Angka dihitung ulang setiap unggah</span><b>CEDC · UNPRI</b></div>
     </aside>
