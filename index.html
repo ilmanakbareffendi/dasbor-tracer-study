@@ -126,6 +126,27 @@ a.btn-ghost { text-decoration: none; display: inline-flex; align-items: center; 
 #pptNamePreview { overflow-wrap: anywhere; font-weight: 600; }
 .chip small.ver { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 2px; }
 .chip[aria-pressed="true"] small.ver { color: inherit; opacity: .85; }
+/* tombol gabungkan berkilau saat file siap */
+.btn-primary.ready { position: relative; overflow: hidden; animation: readyPulse 1.8s ease-in-out infinite; }
+.btn-primary.ready::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-20deg); animation: readyShine 2.4s ease-in-out infinite; pointer-events: none; }
+@keyframes readyPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(21,128,61,.45); } 50% { box-shadow: 0 0 0 8px rgba(21,128,61,0); } }
+@keyframes readyShine { 0% { left: -60%; } 60%, 100% { left: 130%; } }
+@media (prefers-reduced-motion: reduce) { .btn-primary.ready, .btn-primary.ready::after { animation: none; } .btn-primary.ready { box-shadow: 0 0 0 4px rgba(21,128,61,.3); } }
+.fribbon { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-fg); border-radius: 12px; padding: 10px 16px; font-size: 14px; margin-bottom: 14px; }
+.fliphint { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--soft); border: 1px solid var(--line-accent); border-radius: 12px; padding: 10px 16px; font-size: 14px; color: var(--ink2); margin-bottom: 14px; }
+.fliphint span:nth-child(2) { flex: 1; min-width: 200px; }
+.guide-btn { margin: 4px 10px 0 0; }
+#guide { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid var(--line); border-radius: 16px; padding: 0; color: var(--ink2); background: var(--card); }
+#guide::backdrop { background: rgba(16,24,40,.45); }
+#guide .g-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; background: var(--card); border-bottom: 1px solid var(--line); }
+#guide .g-head h2 { margin: 0; font-size: 20px; color: var(--deep); }
+#guide .g-body { padding: 4px 20px 20px; font-size: 14.5px; line-height: 1.6; }
+#guide h3 { margin: 18px 0 6px; font-size: 15px; color: var(--deep); }
+#guide ul, #guide ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+#guide .g-terms { margin: 0; display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); gap: 8px 16px; }
+#guide .g-terms dt { font-weight: 700; color: var(--ink); }
+#guide .g-terms dd { margin: 0; }
+@media (max-width: 560px) { #guide .g-terms { grid-template-columns: 1fr; gap: 2px; } #guide .g-terms dd { margin-bottom: 8px; } }
 .set-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 12px; }
 .set label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink2); }
 .set label span { font-weight: 400; color: var(--muted); font-size: 12.5px; }
@@ -304,6 +325,7 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
     <div class="kop"><strong>CEDC UNPRI</strong><span>Career and Alumni Relations Unit</span></div>
     <h1>Dasbor Tracer Study Prodi</h1>
     <p class="lead">Unggah file paket tracer study dari CARU untuk satu prodi, atau beberapa prodi dari fakultas yang sama sekaligus. Halaman ini membaca periode pengisian, menggabungkan data kuesioner versi 2021 dan 2019, mendeteksi NIM ganda dan jawaban yang janggal, menyusun dasbor per versi kuesioner, dan menyiapkan Excel kompilasi yang sudah diterjemahkan.</p>
+    <button class="btn-ghost sm guide-btn" data-guide type="button">Panduan singkat</button>
     <span class="privacy">File diproses di komputer Anda. Tidak ada data yang dikirim atau disimpan di server.</span>
   </header>
 
@@ -436,6 +458,42 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
     <div id="dashBody" class="section"></div>
   </section>
   <button class="to-top" id="toTop" aria-label="Kembali ke atas" hidden>↑</button>
+
+  <dialog id="guide" aria-labelledby="guideTitle">
+    <div class="g-head"><h2 id="guideTitle">Panduan singkat</h2><button class="btn-ghost sm" id="guideClose" type="button">Tutup</button></div>
+    <div class="g-body">
+      <h3>Tiga langkah</h3>
+      <ol class="g-steps">
+        <li><b>Unggah file paket dari CARU.</b> Klik kotak unggah atau seret file ke sana. Beberapa prodi dari fakultas yang sama boleh diunggah sekaligus.</li>
+        <li><b>Tekan Gabungkan dan tampilkan.</b> Tombol ini berkilau bila file sudah siap.</li>
+        <li><b>Baca dasbor, lalu unduh.</b> Unduh Excel berisi data per alumni. Unduh PPT berisi laporan siap presentasi.</li>
+      </ol>
+      <h3>Membaca dasbor</h3>
+      <ul>
+        <li>Mulai dari <b>Ringkasan</b> di bagian atas; isinya temuan terpenting dalam beberapa kalimat.</li>
+        <li>Judul setiap kartu adalah kesimpulannya. Klik kartu untuk melihat pertanyaan kuesioner, basis data, dan cara hitungnya.</li>
+        <li>Bila jumlah alumni di bawah 30 orang, judul memakai jumlah orang, misalnya "12 dari 17", karena satu orang sudah menggeser beberapa persen.</li>
+      </ul>
+      <h3>Filter dan PPT</h3>
+      <ul>
+        <li>Tombol <b>Filter</b> memilih tahun lulus dan waktu mengisi. Filter berlaku untuk tab Versi 2021, tab Versi 2019, dan PPT sekaligus.</li>
+        <li>PPT diunduh sesuai filter yang sedang aktif. Bila tahun lulus Semua, PPT memuat semua lulusan. Nama file PPT mencantumkan pilihan filter.</li>
+        <li>Lampiran versi 2019 di PPT hanya muncul bila ada alumni versi 2019 pada tahun lulus yang dipilih.</li>
+      </ul>
+      <h3>Istilah</h3>
+      <dl class="g-terms">
+        <dt>Versi 2021 dan versi 2019</dt><dd>Dua bentuk kuesioner tracer study Kemdikbud. Pertanyaannya berbeda, jadi angkanya disajikan terpisah.</dd>
+        <dt>IKU 2</dt><dd>Indikator Kinerja Utama perguruan tinggi: persentase lulusan D1 sampai sarjana yang bekerja, berwirausaha, atau studi lanjut dalam 12 bulan setelah lulus. Angka di dasbor adalah perkiraan awal, bukan capaian resmi.</dd>
+        <dt>Kerja atau studi dalam 12 bulan</dt><dd>Ukuran yang sama dengan IKU 2, dipakai sebagai pembanding untuk magister, doktor, profesi, dan spesialis yang tidak termasuk IKU 2.</dd>
+        <dt>Diisi sebelum wisuda</dt><dd>Alumni yang mengisi kuesioner menjelang lulus. Status kerja mereka menggambarkan kondisi saat itu, bukan satu tahun setelah lulus.</dd>
+        <dt>Jingga</dt><dd>Jawaban yang kemungkinan terisi paksa karena sistem mewajibkan semua pertanyaan diisi. Tidak dihitung di dasbor.</dd>
+        <dt>Kuning</dt><dd>Jawaban yang bertentangan dengan jawaban lain atau tidak sah. Rinciannya per alumni ada di sheet Rincian Temuan pada Excel.</dd>
+        <dt>Basis</dt><dd>Kelompok alumni yang dihitung pada satu kartu, misalnya hanya alumni yang bekerja. Selalu tertulis di bawah judul kartu.</dd>
+      </dl>
+      <h3>Pertanyaan</h3>
+      <p>Hubungi CARU (Career and Alumni Relations Unit), CEDC UNPRI.</p>
+    </div>
+  </dialog>
 
   <footer>Kuesioner mengikuti instrumen tracer study Kemdikbud versi 2021 dan versi 2019 yang dipakai sistem internal UNPRI. Indikasi IKU 2 mengacu Kepmendiktisaintek 358/M/KEP/2025 dan bukan capaian resmi, karena IKU 2 diukur 1 tahun setelah lulus. Arti setiap kode tercantum di sheet Panduan Kode pada Excel kompilasi.</footer>
 </div>
@@ -825,6 +883,7 @@ function renderFiles(){
     : noVer ? '<div class="msg warn">Belum ada file kuesioner (Versi 2021 atau Versi 2019). Daftar pengisian saja tidak cukup untuk membuat dasbor.</div>'
     : noDaftar ? '<div class="msg warn">Tanpa daftar pengisian, tanggal pengisian, tahun masuk, dan pemeriksaan baris di luar periode tidak tersedia. Dasbor tetap bisa dibuat.</div>' : "";
   $("btnProcess").disabled = !has || bad.length > 0 || noVer;
+  $("btnProcess").classList.toggle("ready", !$("btnProcess").disabled);
 }
 async function addFiles(list){ for (const f of list) state.files.push(...await readFile(f)); renderFiles(); }
 
@@ -1135,7 +1194,7 @@ function flipWrap(cls, front, back){
 let REP = null;
 function card(o){
   if (REP) REP.cards.push({ key: o.key || null, q: o.q, title: o.title, back: o.back || [], ppt: o.ppt, wide: !!o.wide });
-  const front = '<div class="card-top"><p class="q">' + o.q + '</p><span class="info-chip">i&nbsp;Detail teknis</span></div><h3 class="insight">' + o.title + "</h3>" + o.body;
+  const front = '<div class="card-top"><p class="q">' + o.q + '</p><span class="info-chip">i&nbsp;Cara hitung</span></div><h3 class="insight">' + o.title + "</h3>" + o.body;
   return flipWrap("card chart-card" + (o.wide ? " wide" : ""), front, tech(o.back || []));
 }
 function statCard(o){
@@ -1196,13 +1255,19 @@ function renderFilters(){
   $("btnFilter").innerHTML = '<span class="lb-l">Filter: ' + esc(ft || "semua lulusan") + '</span><span class="lb-s">Filter' + (ft ? " •" : "") + "</span>"; $("btnFilter").classList.toggle("on", !!ft);
 }
 
+function filterRibbon(){
+  const f = fShared(); if (!f.tahun.size && !f.jenis) return "";
+  return '<div class="fribbon" role="status"><span><b>Filter aktif:</b> ' + esc(lulusanText(f) + (jenisText(f) ? " · " + jenisText(f).toLowerCase() : "")) + '. Angka di dasbor dan PPT hanya untuk pilihan ini.</span><button class="btn-ghost sm" data-clearfilter type="button">Hapus filter</button></div>';
+}
+let hintOff = false; try { hintOff = localStorage.getItem("tracer-hint") === "1"; } catch (e) {}
+function flipHint(){ return hintOff ? "" : '<div class="fliphint" role="note"><span class="info-chip">i</span><span>Klik kartu mana pun untuk melihat pertanyaan kuesioner, basis data, dan cara hitungnya. Klik lagi untuk kembali.</span><button class="btn-link" data-hintoff type="button">Mengerti</button></div>'; }
 let SMALLN = false;
 // prodi kecil (di bawah 30 alumni): judul kartu memakai jumlah orang, bukan persentase
 const tp = (a, b) => SMALLN || b < 30 ? fmt(a) + " dari " + fmt(b) : fpct(a, b);
 function renderDash(){
   const v = state.tab, V = VERSIONS[v], X = filtered(v), rows = X.map(x => x.r), M = X.map(x => x.m), N = X.length;
   const v21 = v === "v2021";
-  if (!N) { REP = null; const o = v === "v2021" ? "v2019" : "v2021", no = tabRows(o).length ? filtered(o).length : 0; $("dashBody").innerHTML = '<div class="msg warn">Tidak ada alumni ' + VERSIONS[v].label.toLowerCase() + " pada filter ini." + (no ? " Ada " + fmt(no) + " alumni " + VERSIONS[o].label.toLowerCase() + "; lihat tab " + VERSIONS[o].label + ". PPT tetap bisa diunduh." : " Ubah filter tahun lulus atau waktu mengisi.") + "</div>"; return; }
+  if (!N) { REP = null; const o = v === "v2021" ? "v2019" : "v2021", no = tabRows(o).length ? filtered(o).length : 0; $("dashBody").innerHTML = filterRibbon() + '<div class="msg warn">Tidak ada alumni ' + VERSIONS[v].label.toLowerCase() + " pada filter ini." + (no ? " Ada " + fmt(no) + " alumni " + VERSIONS[o].label.toLowerCase() + "; lihat tab " + VERSIONS[o].label + ". PPT tetap bisa diunduh." : " Ubah filter tahun lulus atau waktu mengisi.") + "</div>"; return; }
   REP = { v, N, cards: [], stats: [], sum: [], pre: null, filt: fShared() };
   SMALLN = N < 30;
   const thr = num(String(state.settings.ump).replace(/\D/g, "")) || DEFAULT_UMP;
@@ -1261,7 +1326,7 @@ function renderDash(){
   else sum.push("<b>" + fpct(counted, N) + "</b> alumni bekerja atau berwirausaha dalam 12 bulan setelah lulus, atau melanjutkan studi" + (altAdd ? "; " + altTxt.replace(/IKU 2 menjadi (.*)$/, "angkanya menjadi <b>$1</b>") : "") + ". IKU 2 resmi hanya mengukur lulusan D1 sampai sarjana, sehingga untuk lulusan " + J.lulusan + " angka ini hanya pembanding.");
   REP.sum = sum.slice(); if (pre.length) REP.pre = { n: pre.length, N, lbl: preLbl };
   REP.weighted = weighted; REP.years = [...new Set(M.map(m => m.tahun).filter(y => y != null))]; REP.outL = X.filter(x => x.inList === false).length;
-  let html = '<div class="summary"><span class="eyebrow">Ringkasan</span><ol>' + sum.map(s => "<li>" + s + "</li>").join("") + "</ol>" + (N < 30 ? '<p class="note">Jumlah alumni di bawah 30 orang: satu orang sudah menggeser beberapa poin persen. Baca angka dengan hati-hati.</p>' : "") + "</div>";
+  let html = filterRibbon() + flipHint() + '<div class="summary"><span class="eyebrow">Ringkasan</span><ol>' + sum.map(s => "<li>" + s + "</li>").join("") + "</ol>" + (N < 30 ? '<p class="note">Jumlah alumni di bawah 30 orang: satu orang sudah menggeser beberapa poin persen. Baca angka dengan hati-hati.</p>' : "") + "</div>";
   if (pre.length) html += '<div class="prewis"><span class="pill warn">Diisi sebelum wisuda</span><span>' + fmt(pre.length) + " dari " + fmt(N) + " alumni pada tampilan ini adalah " + esc(preLbl) + ". Angka mereka menggambarkan kondisi menjelang lulus, bukan hasil tracer study satu tahun setelah lulus. Pekerjaan dan nama perusahaan yang mereka isi tetap dihitung, karena banyak mahasiswa UNPRI sudah bekerja atau berwirausaha sebelum lulus.</span></div>";
 
   /* ---------- KARTU UTAMA ---------- */
@@ -1767,6 +1832,13 @@ $("btnClear").addEventListener("click", resetAll);
 $("btnProcess").addEventListener("click", () => { state.example = false; processFiles(state.files.filter(f => !f.errors.length && !f.crossError)); });
 $("btnExample").addEventListener("click", () => { resetAll(); state.example = true; processFiles(makeExample()); });
 $("btnExitExample").addEventListener("click", () => { resetAll(); $("sec-upload").scrollIntoView({ behavior: "smooth" }); });
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-guide]")) { const d = $("guide"); if (d.showModal) d.showModal(); else d.setAttribute("open", ""); }
+  if (e.target.closest("[data-clearfilter]")) { const f = fShared(); f.tahun.clear(); f.jenis = ""; renderFilters(); renderDash(); }
+  if (e.target.closest("[data-hintoff]")) { hintOff = true; try { localStorage.setItem("tracer-hint", "1"); } catch (er) {} const h = document.querySelector(".fliphint"); if (h) h.remove(); }
+});
+$("guideClose").addEventListener("click", () => { const d = $("guide"); if (d.close) d.close(); else d.removeAttribute("open"); });
+$("guide").addEventListener("click", e => { if (e.target.id === "guide" && e.target.close) e.target.close(); });
 $("dashBody").addEventListener("click", e => { const c = e.target.closest(".flip"); if (!c) return; if (e.target.closest("a, input, select, textarea, summary")) return; if (String(window.getSelection ? window.getSelection() : "").length) return; const on = c.classList.toggle("flipped"); c.setAttribute("aria-pressed", String(on)); });
 $("dashBody").addEventListener("keydown", e => { const c = e.target.closest(".flip"); if (!c || e.target !== c || (e.key !== "Enter" && e.key !== " ")) return; e.preventDefault(); const on = c.classList.toggle("flipped"); c.setAttribute("aria-pressed", String(on)); });
 $("tabs").addEventListener("click", e => { const b = e.target.closest(".tab"); if (!b) return; state.tab = b.dataset.tab; renderTabs(); renderFilters(); renderDash(); renderBar(); });
@@ -1791,7 +1863,7 @@ function renderBar(){
   const prodi = state.gi >= 0 ? prodiShortOf(c) + (c.prodi != null ? " (" + c.prodi + ")" : "") : G.map(gLabel).join(", ");
   $("barTitle").textContent = multi ? (fak || "Beberapa prodi") : prodi + (fak ? " · " + fak : "");
   $("barSub").innerHTML = esc((multi ? (state.gi >= 0 ? prodi + " · " : "Perbandingan " + G.length + " prodi · ") : "") + per + (state.gi >= 0 ? " · " + fmt(c.kept.length) + " alumni" : "")) +
-    ' · <button class="btn-link" id="btnDetail">Rincian data</button> · <button class="btn-link" id="btnChange">Ganti file</button>';
+    ' · <button class="btn-link" id="btnDetail">Rincian data</button> · <button class="btn-link" id="btnChange">Ganti file</button> · <button class="btn-link" data-guide>Panduan</button>';
   const cmp = state.gi < 0; $("btnFilter").hidden = cmp; $("btnSettings").hidden = cmp;
   $("btnExcel").innerHTML = '<span class="lb-l">Unduh </span>Excel' + (multi ? " ▾" : ""); $("btnPpt").innerHTML = '<span class="lb-l">Unduh </span>PPT' + (multi ? " ▾" : "");
   $("btnSettings").innerHTML = '<span class="lb-l">Pengaturan</span><span class="lb-s">Atur</span>';
