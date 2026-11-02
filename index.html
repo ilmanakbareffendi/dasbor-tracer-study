@@ -1962,8 +1962,8 @@ function pkInfo(src){
   return { n: body.length, nims: body.map(r => nimKey(r[iN])), kode: [...new Set(body.map(r => nimKey(r[iK])).filter(Boolean))], lulus };
 }
 function pkCompute(){
-  if (!PK.daftar) return null;
-  const dA = PK.daftar.aoa, dh = dA[0].map(x => String(x == null ? "" : x).trim()), col = re => dh.findIndex(x => re.test(x));
+  if (!PK.daftar && !PK.v21 && !PK.v19) return null;
+  const noD = !PK.daftar, dA = noD ? [[]] : PK.daftar.aoa, dh = dA[0].map(x => String(x == null ? "" : x).trim()), col = re => dh.findIndex(x => re.test(x));
   const iN = col(/^NIM$/i), iP = col(/^Program Studi/i), iA = col(/^Tahun (Alumni|Lulus)/i);
   const daftar = {}; dA.slice(1).forEach(r => { const k = r && nimKey(r[iN]); if (k) daftar[k] = r; });
   const prodiNames = [...new Set(dA.slice(1).map(r => r && iP >= 0 && !isBlank(r[iP]) ? String(r[iP]).trim() : null).filter(Boolean))].sort();
@@ -1971,6 +1971,8 @@ function pkCompute(){
   const per = PK.namePeriod, dari = per ? per.from : pkF.dari, sampai = per ? per.to : pkF.sampai;
   const i21 = pkInfo(PK.v21), i19 = pkInfo(PK.v19), kode = [...new Set(i21.kode.concat(i19.kode))].sort(), fakultas = FAKULTAS[prodi] || "";
   const cek = [], add = (level, teks) => cek.push({ level, teks }), ival = s => s === "" || s == null ? null : parseInt(String(s).replace(/\D/g, ""), 10);
+  if (noD) add("peringatan", "Data Mahasiswa tidak diunggah. Paket tetap dibuat, tetapi tanggal pengisian, tahun masuk, dan pemeriksaan baris di luar periode tidak tersedia. File versi 2019 dari sistem bisa memuat baris di luar periode yang tidak bisa dipisahkan tanpa Data Mahasiswa. Bila Data Mahasiswa sudah bisa diunduh, buat ulang paketnya.");
+  if (noD && !pkF.prodiLayar) add("gagal", "Prodi belum diketahui. Tanpa Data Mahasiswa, prodi diambil dari screenshot; isi kolom Prodi di layar.");
   if (!PK.v21 && !PK.v19) add("gagal", "File kuesioner belum diunggah (Download Versi 2021 dan, bila ada, Download Versi 2019).");
   if (kode.length > 1) add("gagal", "File kuesioner berisi lebih dari satu kode prodi: " + kode.join(", ") + ".");
   if (prodiNames.length > 1) add("gagal", "Daftar pengisian berisi lebih dari satu prodi: " + prodiNames.join(", ") + ".");
@@ -1978,18 +1980,18 @@ function pkCompute(){
   if (!dari || !sampai) add("gagal", "Periode pengisian belum diketahui: nama file Data Mahasiswa sudah diganti dan periode di screenshot tidak terbaca. Isi kolom periode.");
   if (per && pkF.dari && pkF.sampai && (per.from !== pkF.dari || per.to !== pkF.sampai)) add("peringatan", "Periode di nama file Data Mahasiswa (" + per.from + " sd " + per.to + ") berbeda dengan periode di screenshot (" + pkF.dari + " sd " + pkF.sampai + "). Paket memakai periode dari nama file.");
   const tot = ival(pkF.total), n21 = ival(pkF.n21), n19 = ival(pkF.n19), nD = Object.keys(daftar).length;
-  if (tot !== null) add(tot === nD ? "ok" : "peringatan", "Baris di layar " + tot + "; baris di daftar pengisian " + nD + "." + (tot < nD && PK.ocr.status === "done" ? " Bila screenshot bawah tidak memperlihatkan baris terakhir daftar, ubah angka baris di layar." : ""));
+  if (tot !== null && !noD) add(tot === nD ? "ok" : "peringatan", "Baris di layar " + tot + "; baris di daftar pengisian " + nD + "." + (tot < nD && PK.ocr.status === "done" ? " Bila screenshot bawah tidak memperlihatkan baris terakhir daftar, ubah angka baris di layar." : ""));
   [["versi 2021", n21, i21], ["versi 2019", n19, i19]].forEach(([l, lay, inf]) => { if (lay !== null) add(lay === inf.n ? "ok" : "peringatan", "Baris " + l + ": di layar " + lay + ", di file " + inf.n + "."); });
   const luar = {};
   [["versi 2021", i21], ["versi 2019", i19]].forEach(([l, inf]) => {
-    const out = inf.nims.filter(n => !daftar[n]); luar[l] = out;
+    const out = noD ? [] : inf.nims.filter(n => !daftar[n]); luar[l] = out;
     if (out.length) add("peringatan", out.length + " baris " + l + " tidak ada di daftar pengisian (kemungkinan di luar periode). Contoh NIM: " + out.slice(0, 5).join(", ") + ".");
     const cnt = {}; inf.nims.forEach(n => { cnt[n] = (cnt[n] || 0) + 1; }); const dup = Object.keys(cnt).filter(n => cnt[n] > 1);
     if (dup.length) add("peringatan", dup.length + " NIM ganda di file " + l + ". Contoh: " + dup.slice(0, 5).join(", ") + ".");
   });
   const s19 = new Set(i19.nims), cross = i21.nims.filter(n => s19.has(n));
   if (cross.length) add("peringatan", cross.length + " NIM ada di versi 2021 dan versi 2019 sekaligus; web app memakai isian versi 2021.");
-  const all = new Set(i21.nims.concat(i19.nims)), tanpa = Object.keys(daftar).filter(n => !all.has(n));
+  const all = new Set(i21.nims.concat(i19.nims)), tanpa = noD ? [] : Object.keys(daftar).filter(n => !all.has(n));
   if (tanpa.length) add("peringatan", tanpa.length + " NIM di daftar pengisian tidak ada di file kuesioner. Contoh: " + tanpa.slice(0, 5).join(", ") + ".");
   const beda = [];
   [i21, i19].forEach(inf => Object.entries(inf.lulus).forEach(([n, y]) => { const r = daftar[n], dy = r && iA >= 0 ? nimKey(r[iA]) : null; if (dy && y && dy !== y) beda.push(n + " (" + y + " di file, " + dy + " di daftar)"); }));
@@ -1998,10 +2000,11 @@ function pkCompute(){
   if (!cek.some(c => c.level !== "ok")) add("ok", "Tidak ada temuan pada tarikan ini.");
   const nama = "Tracer_" + shortNama(prodi) + "_" + (kode[0] || "kode") + "_" + dari + " sd " + sampai + ".xlsx";
   const nLuar = (luar["versi 2021"] || []).length + (luar["versi 2019"] || []).length;
-  const bagian = [i21.n + " alumni kuesioner versi 2021"].concat(i19.n ? [i19.n + " alumni versi 2019"] : []);
-  const wa = "Yth. Pimpinan " + (fakultas || "Fakultas") + " / PIC Tracer Study,\n\nBersama ini kami sampaikan data tracer study " + shortNama(prodi) + " periode pengisian " + tglPanjang(dari) + " sampai " + tglPanjang(sampai) + " (" + bagian.join(" dan ") + ").\n\nMohon file terlampir diunggah melalui tautan berikut untuk memperoleh dasbor dan Excel kompilasi:\n" + WEB_LINK + "\n\n" + (nLuar ? "Catatan: " + nLuar + " baris berada di luar periode pengisian dan sudah ditandai di dasbor serta Excel.\n\n" : "") + "Hormat kami,\nCARU CEDC UNPRI";
+  const lebih19 = noD && n19 !== null && n19 < i19.n ? i19.n - n19 : 0;
+  const bagian = [i21.n + " alumni kuesioner versi 2021"].concat(i19.n ? [lebih19 ? i19.n + " baris versi 2019, " + lebih19 + " di antaranya kemungkinan di luar periode" : i19.n + " alumni versi 2019"] : []);
+  const wa = "Yth. Pimpinan " + (fakultas || "Fakultas") + " / PIC Tracer Study,\n\nBersama ini kami sampaikan data tracer study " + shortNama(prodi) + " periode pengisian " + tglPanjang(dari) + " sampai " + tglPanjang(sampai) + " (" + bagian.join(" dan ") + ").\n\nMohon file terlampir diunggah melalui tautan berikut untuk memperoleh dasbor dan Excel kompilasi:\n" + WEB_LINK + "\n\n" + (nLuar ? "Catatan: " + nLuar + " baris berada di luar periode pengisian dan sudah ditandai di dasbor serta Excel.\n\n" : noD ? "Catatan: Data Mahasiswa belum dapat diunduh dari sistem, sehingga tanggal pengisian dan tahun masuk belum tersedia di dasbor. Paket lengkap akan kami kirim setelah data tersedia.\n\n" : "") + "Hormat kami,\nCARU CEDC UNPRI";
   const catatan = cek.filter(c => c.level !== "ok").map(c => c.teks).join(" ");
-  const log = [pkF.tarik, prodi, kode[0] || "", fakultas, dari, sampai, pkF.tahunMasuk, pkF.tahapan, tot ?? "", i21.n, i19.n, nD, nLuar, catatan, nama, "", ""];
+  const log = [pkF.tarik, prodi, kode[0] || "", fakultas, dari, sampai, pkF.tahunMasuk, pkF.tahapan, tot ?? "", i21.n, i19.n, noD ? "" : nD, noD ? "" : nLuar, catatan, nama, "", ""];
   return { prodi, kode, fakultas, dari, sampai, i21, i19, nD, tot, n21, n19, cek, nama, wa, log, gagal: cek.some(c => c.level === "gagal") };
 }
 // salinan sheet dari sistem: nilai apa adanya; angka 16 digit ke atas jadi teks, angka berformat tanggal yang tidak sah jadi angka biasa
@@ -2019,20 +2022,20 @@ function pkBuild(R){
   const info = [["kunci", "Keterangan", "Nilai"], ["prodi", "Program studi", R.prodi], ["kode_prodi", "Kode prodi PDDikti", R.kode[0] || null], ["fakultas", "Fakultas", R.fakultas],
     ["periode_dari", "Periode pengisian dari", R.dari], ["periode_sampai", "Periode pengisian sampai", R.sampai], ["filter_tahun_masuk", "Filter tahun masuk", pkF.tahunMasuk || null], ["filter_tahapan", "Filter tahapan masuk", pkF.tahapan || null],
     ["tanggal_tarik", "Tanggal tarik data", pkF.tarik], ["layar_total", "Baris di layar sistem (total)", R.tot], ["layar_v2021", "Baris di layar, versi 2021", R.n21], ["layar_v2019", "Baris di layar, versi 2019", R.n19],
-    ["file_v2021", "Baris di file versi 2021", R.i21.n], ["file_v2019", "Baris di file versi 2019", R.i19.n], ["file_daftar", "Baris di daftar pengisian", R.nD], ["dibuat_oleh", "Disusun oleh", "Dasbor tracer study, mode CARU (CEDC UNPRI)"]]
+    ["file_v2021", "Baris di file versi 2021", R.i21.n], ["file_v2019", "Baris di file versi 2019", R.i19.n], ["file_daftar", "Baris di daftar pengisian", PK.daftar ? R.nD : null], ["dibuat_oleh", "Disusun oleh", "Dasbor tracer study, mode CARU (CEDC UNPRI)"]]
     .concat(R.cek.filter(c => c.level !== "ok").map(c => ["catatan", "Hasil cek", c.teks]));
   const wsI = XLSX.utils.aoa_to_sheet(info); wsI["!cols"] = [{ wch: 20 }, { wch: 32 }, { wch: 90 }];
   XLSX.utils.book_append_sheet(wb, wsI, "Info Tarikan");
   if (PK.v21) XLSX.utils.book_append_sheet(wb, pkCopy(PK.v21.ws, "Versi 2021"), "Versi 2021");
   if (PK.v19) { const ws = XLSX.utils.aoa_to_sheet(PK.v19.aoa); Object.keys(ws).forEach(k => { if (k[0] !== "!") { ws[k].t = "s"; ws[k].v = String(ws[k].v); ws[k].z = "@"; } }); XLSX.utils.book_append_sheet(wb, ws, "Versi 2019"); }
-  XLSX.utils.book_append_sheet(wb, pkCopy(PK.daftar.ws, "Daftar Pengisian"), "Daftar Pengisian");
+  if (PK.daftar) XLSX.utils.book_append_sheet(wb, pkCopy(PK.daftar.ws, "Daftar Pengisian"), "Daftar Pengisian");
   return new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array", bookSST: true })], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
 
 /* ---------- tampilan ---------- */
 function pkRender(msgs){
   const slot = (lbl, src, btn) => '<li class="' + (src ? "ok" : "") + '"><b>' + lbl + "</b><span>" + (src ? esc(src.file.name) : "Belum ada · tombol " + btn) + "</span></li>";
-  $("pkSlots").innerHTML = slot("Versi 2021", PK.v21, "Download Versi 2021") + slot("Versi 2019", PK.v19, "Download Versi 2019 (boleh tidak ada)") + slot("Data Mahasiswa", PK.daftar, "Download Data Mahasiswa") +
+  $("pkSlots").innerHTML = slot("Versi 2021", PK.v21, "Download Versi 2021") + slot("Versi 2019", PK.v19, "Download Versi 2019 (boleh tidak ada)") + slot("Data Mahasiswa", PK.daftar, "Download Data Mahasiswa (sangat disarankan)") +
     '<li class="' + (PK.shots.length ? "ok" : "") + '"><b>Screenshot</b><span>' + (PK.shots.length ? PK.shots.length + " gambar" : "Belum ada · bagian atas (isian prodi dan periode) dan bagian bawah daftar") + "</span></li>";
   const o = PK.ocr;
   $("pkOcr").innerHTML = (msgs && msgs.length ? msgs.map(m => '<div class="msg bad">' + esc(m) + "</div>").join("") : "") +
