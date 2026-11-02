@@ -269,6 +269,20 @@ details summary { cursor: pointer; font-weight: 700; color: var(--deep); }
 .comp-bar span { display: block; height: 100%; }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 @media (prefers-reduced-motion: reduce) { .flip-inner, .flip .face { transition: none; } }
+.contact { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px 24px; margin-bottom: 18px; }
+.contact h2 { margin: 0 0 14px; font-size: 18px; color: var(--deep); }
+.ct-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 32px; }
+.ct-grid > div { min-width: 0; display: grid; gap: 4px; align-content: start; }
+.ct-label { margin: 0 0 2px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.ct-name { margin: 0; font-weight: 700; color: var(--ink); font-size: 15px; }
+.ct-role { margin: 0; font-size: 13.5px; color: var(--muted); }
+.ct-line { margin: 0; font-size: 14px; color: var(--ink2); overflow-wrap: anywhere; }
+.ct-line a { color: var(--accent); font-weight: 600; }
+.ct-card { display: grid; gap: 4px; background: var(--soft); border: 1px solid var(--line-accent); border-radius: 12px; padding: 14px 16px; }
+.wa-btn { justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; background: #128C4A; color: #fff; text-decoration: none; font-weight: 700; font-size: 14px; border-radius: 999px; padding: 10px 18px; }
+.wa-btn:hover { background: #0E7A3F; }
+.wa-btn:focus-visible { outline: 3px solid var(--light); outline-offset: 2px; }
+.wa-ico { width: 20px; height: 20px; flex-shrink: 0; }
 footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
 
 /* bilah atas dasbor: menempel saat digulir */
@@ -491,9 +505,34 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
         <dt>Basis</dt><dd>Kelompok alumni yang dihitung pada satu kartu, misalnya hanya alumni yang bekerja. Selalu tertulis di bawah judul kartu.</dd>
       </dl>
       <h3>Pertanyaan</h3>
-      <p>Hubungi CARU (Career and Alumni Relations Unit), CEDC UNPRI.</p>
+      <div class="ct-card">
+        <p class="ct-name">Ilman Akbar Effendi, S.IP., M.I.Kom.</p>
+        <p class="ct-role">Kepala Career and Alumni Relations Unit (CARU), Career, Entrepreneurship, and Development Center (CEDC) Universitas Prima Indonesia</p>
+        <p class="ct-line">Email: <a href="mailto:ilmanakbareffendi@unprimdn.ac.id">ilmanakbareffendi@unprimdn.ac.id</a></p>
+        <a class="wa-btn" href="https://wa.me/6287794410317?text=Halo%20Pak%20Ilman%2C%20saya%20ingin%20bertanya%20tentang%20Dasbor%20Tracer%20Study." target="_blank" rel="noopener"><svg class="wa-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3C6.9 3 3 6.6 3 11c0 2.2 1 4.2 2.6 5.6L5 21l4.2-2.1c.9.2 1.8.3 2.8.3 5.1 0 9-3.6 9-8.1S17.1 3 12 3zm-4 9.3a1.2 1.2 0 1 1 0-2.5 1.2 1.2 0 0 1 0 2.5zm4 0a1.2 1.2 0 1 1 0-2.5 1.2 1.2 0 0 1 0 2.5zm4 0a1.2 1.2 0 1 1 0-2.5 1.2 1.2 0 0 1 0 2.5z"/></svg><span>Hubungi lewat WhatsApp</span></a>
+      </div>
     </div>
   </dialog>
+
+  <section class="contact" aria-labelledby="h-contact">
+    <h2 id="h-contact">Kantor dan kontak</h2>
+    <div class="ct-grid">
+      <div>
+        <p class="ct-label">Lokasi kantor</p>
+        <p class="ct-name">CARU CEDC UNPRI</p>
+        <p class="ct-line">Kampus Utama Universitas Prima Indonesia, Lantai 17<br>Jl. Sampul No. 3, Medan, Sumatera Utara</p>
+        <p class="ct-line"><a href="https://www.google.com/maps/search/?api=1&amp;query=Universitas+Prima+Indonesia+Jl.+Sampul+No.+3+Medan" target="_blank" rel="noopener">Buka di Google Maps</a></p>
+        <p class="ct-line">Email CEDC: <a href="mailto:pusatkarir@unprimdn.ac.id">pusatkarir@unprimdn.ac.id</a></p>
+      </div>
+      <div>
+        <p class="ct-label">Narahubung dasbor tracer study</p>
+        <p class="ct-name">Ilman Akbar Effendi, S.IP., M.I.Kom.</p>
+        <p class="ct-role">Kepala Career and Alumni Relations Unit (CARU), Career, Entrepreneurship, and Development Center (CEDC) Universitas Prima Indonesia</p>
+        <p class="ct-line">Email: <a href="mailto:ilmanakbareffendi@unprimdn.ac.id">ilmanakbareffendi@unprimdn.ac.id</a><br>WhatsApp: 0877 9441 0317</p>
+        <a class="wa-btn" href="https://wa.me/6287794410317?text=Halo%20Pak%20Ilman%2C%20saya%20ingin%20bertanya%20tentang%20Dasbor%20Tracer%20Study." target="_blank" rel="noopener"><svg class="wa-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3C6.9 3 3 6.6 3 11c0 2.2 1 4.2 2.6 5.6L5 21l4.2-2.1c.9.2 1.8.3 2.8.3 5.1 0 9-3.6 9-8.1S17.1 3 12 3zm-4 9.3a1.2 1.2 0 1 1 0-2.5 1.2 1.2 0 0 1 0 2.5zm4 0a1.2 1.2 0 1 1 0-2.5 1.2 1.2 0 0 1 0 2.5zm4 0a1.2 1.2 0 1 1 0-2.5 1.2 1.2 0 0 1 0 2.5z"/></svg><span>Hubungi lewat WhatsApp</span></a>
+      </div>
+    </div>
+  </section>
 
   <footer>Kuesioner mengikuti instrumen tracer study Kemdikbud versi 2021 dan versi 2019 yang dipakai sistem internal UNPRI. Indikasi IKU 2 mengacu Kepmendiktisaintek 358/M/KEP/2025 dan bukan capaian resmi, karena IKU 2 diukur 1 tahun setelah lulus. Arti setiap kode tercantum di sheet Panduan Kode pada Excel kompilasi.</footer>
 </div>
