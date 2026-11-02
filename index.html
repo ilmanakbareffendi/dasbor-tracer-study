@@ -40,6 +40,20 @@ p { margin: 0; }
 .num { font-variant-numeric: tabular-nums; }
 .kop { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 13px; color: var(--muted); }
 .kop strong { color: var(--deep); font-family: var(--f-display); font-weight: 700; letter-spacing: .02em; }
+.topnav { display: flex; align-items: center; gap: 14px 24px; flex-wrap: wrap; padding: 4px 0 14px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; margin-right: auto; min-width: 0; }
+.brand img { width: 46px; height: auto; flex-shrink: 0; }
+.brand-txt { display: grid; gap: 2px; min-width: 0; }
+.brand-txt b { font-family: var(--f-display); font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+.brand-txt em { font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--deep); border-radius: 7px; padding: 3px 8px; }
+.brand-txt small { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tn-tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px; }
+.tn { background: none; border: 0; border-radius: 10px; padding: 9px 16px; font-size: 14.5px; font-weight: 700; color: var(--muted); }
+.tn:hover { color: var(--deep); }
+.tn.on { background: var(--soft); color: var(--deep); box-shadow: inset 0 0 0 1px var(--line-accent); }
+.tn-cta { text-decoration: none; font-weight: 700; font-size: 14.5px; color: #fff; background: var(--deep); border-radius: 12px; padding: 10px 18px; }
+.tn-cta:hover { background: var(--accent); }
+@media (max-width: 720px) { .topnav { gap: 10px; } .brand-txt b { font-size: 18px; } .brand-txt small { font-size: 10.5px; } .tn-tabs { flex: 1; } .tn { flex: 1; padding: 8px 10px; } .tn-cta { padding: 9px 14px; } }
 .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 32px; align-items: center; padding-block: 24px 8px; position: relative; }
 .hero::before { content: ""; position: absolute; inset: -24px 0 auto auto; width: min(520px, 60%); height: 360px; background: radial-gradient(closest-side, rgba(74,222,128,.18), transparent); pointer-events: none; z-index: -1; }
 .hero-main { display: grid; gap: 18px; align-content: center; min-width: 0; }
@@ -369,6 +383,19 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
 </style>
 
 <div class="wrap">
+  <nav class="topnav" aria-label="Navigasi utama">
+    <a class="brand" href="#" data-home aria-label="Beranda Dasbor Tracer Study">
+      <img id="brandLogo" alt="" width="46" height="39">
+      <span class="brand-txt"><b>Tracer Study <em>Dasbor</em></b><small>CEDC UNPRI · Career and Alumni Relations Unit</small></span>
+    </a>
+    <div class="tn-tabs">
+      <button class="tn on" type="button" data-home id="tnHome">Beranda</button>
+      <button class="tn" type="button" data-gotodash id="tnDash" hidden>Dasbor</button>
+      <button class="tn" type="button" data-guide>Panduan</button>
+    </div>
+    <a class="tn-cta" href="#kontak">Kontak</a>
+  </nav>
+
   <header class="hero" id="hero">
     <div class="hero-main">
       <span class="hero-pill"><i aria-hidden="true"></i>CARU · CEDC UNPRI</span>
@@ -1908,15 +1935,29 @@ function processFiles(files){
     .sort((p, q) => JRANK(prodiShortOf(p.compiled)) - JRANK(prodiShortOf(q.compiled)) || String(prodiShortOf(p.compiled)).localeCompare(prodiShortOf(q.compiled)));
   state.settings.pre = null; state.gi = 0; useGroup(0);
   applyPre(); renderCompile(); renderAll();
-  $("sec-upload").hidden = true; $("sec-compile").hidden = true; $("sec-dash").hidden = false; $("hero").hidden = true;
-  requestAnimationFrame(() => $("sec-dash").scrollIntoView({ behavior: "smooth", block: "start" }));
+  setView("dash");
+  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 function useGroup(i){
   const cur = state.groups[state.gi]; if (cur && state.gi >= 0) { cur.tab = state.tab; }
   state.gi = i; if (i < 0) return;
   const g = state.groups[i]; state.compiled = g.compiled; state.filters = g.filters; state.tab = g.tab;
 }
-function resetAll(){ $("hero").hidden = false; state.files = []; state.compiled = null; state.groups = []; state.gi = 0; state.example = false; $("sec-compile").hidden = true; $("sec-dash").hidden = true; $("sec-upload").hidden = false; renderFiles(); }
+// Beranda dan Dasbor: beranda menampilkan halaman unggah tanpa menghapus data yang sudah dimuat
+function setView(v){
+  const dash = v === "dash" && state.groups.length;
+  $("hero").hidden = !!dash; $("sec-upload").hidden = !!dash; $("sec-dash").hidden = !dash; if (dash) $("sec-compile").hidden = true; else $("sec-compile").hidden = true;
+  $("sec-paket").hidden = !!dash || location.hash !== "#caru";
+  $("tnHome").classList.toggle("on", !dash); $("tnDash").classList.toggle("on", !!dash); $("tnDash").hidden = !state.groups.length;
+  if (dash) closePanels();
+}
+document.addEventListener("click", e => {
+  const h = e.target.closest("[data-home]"), d = e.target.closest("[data-gotodash]");
+  if (h) { e.preventDefault(); if (state.example) resetAll(); setView("home"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  if (d) { setView("dash"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+});
+setTimeout(() => { $("brandLogo").src = LOGO_PNG; });
+function resetAll(){ $("hero").hidden = false; state.files = []; state.compiled = null; state.groups = []; state.gi = 0; state.example = false; $("sec-compile").hidden = true; $("sec-dash").hidden = true; $("sec-upload").hidden = false; renderFiles(); setView("home"); }
 const drop = $("drop"), input = $("fileInput");
 input.addEventListener("change", () => { if (state.example) resetAll(); addFiles([...input.files]); input.value = ""; });
 drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
@@ -2249,7 +2290,7 @@ async function pkCopyText(text, btn){
   catch (e) { const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand("copy"); btn.textContent = "Tersalin"; } catch (er) { btn.textContent = "Salin manual"; } t.remove(); }
   setTimeout(() => { btn.textContent = old; }, 1800);
 }
-function pkRoute(){ $("sec-paket").hidden = location.hash !== "#caru"; }
+function pkRoute(){ $("sec-paket").hidden = location.hash !== "#caru" || !$("sec-dash").hidden; }
 (function pkInit(){
   const inp = $("pkInput"), drop = $("pkDrop");
   inp.addEventListener("change", () => { pkAdd([...inp.files]); inp.value = ""; });
