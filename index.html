@@ -81,12 +81,12 @@ p { margin: 0; }
 .hc-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--muted); padding-top: 4px; border-top: 1px solid var(--line); }
 .hc-foot b { color: var(--accent); }
 .flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; counter-reset: none; }
-.flow li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px 18px; box-shadow: 0 2px 8px rgba(16,24,40,.05); }
+.flow li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px 18px; box-shadow: 0 2px 8px rgba(16,24,40,.05); }
 .flow li > div { display: grid; gap: 4px; min-width: 0; }
 .flow b { font-family: var(--f-display); font-size: 16px; color: var(--ink); }
 .flow span:not(.fl-n) { font-size: 14px; color: var(--muted); }
 .flow a { font-size: 14px; font-weight: 700; color: var(--accent); width: fit-content; }
-.fl-n { width: 40px; height: 40px; border-radius: 12px; background: var(--deep); color: #fff; display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 17px; }
+.fl-n { font-family: var(--f-display); font-weight: 800; font-size: 34px; line-height: 1; letter-spacing: -.02em; background: linear-gradient(135deg, var(--deep), #22C55E); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--accent); padding: 2px 2px 4px 0; }
 #kontak { scroll-margin-top: 16px; }
 @media (max-width: 860px) { .hero { grid-template-columns: minmax(0, 1fr); gap: 22px; } .hero::before { display: none; } .flow { grid-template-columns: minmax(0, 1fr); } }
 .hero h1 { font-size: clamp(36px, 5.4vw, 58px); letter-spacing: -.025em; font-weight: 800; line-height: 1.06; padding: 2px 4px 6px 0; color: var(--ink); }
@@ -166,6 +166,10 @@ details.set summary { cursor: pointer; font-weight: 700; color: var(--deep); }
 .pk-cek { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .pk-cek li { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; color: var(--ink2); }
 .pk-name { margin: 12px 0 10px; font-size: 13.5px; color: var(--ink2); overflow-wrap: anywhere; }
+.btn-utama { display: inline-flex; align-items: center; text-decoration: none; font-family: var(--f-body); font-weight: 700; font-size: 15px; color: #fff; padding: 13px 26px; border-radius: 12px; background: linear-gradient(95deg, var(--deep), #4ADE80); box-shadow: 0 16px 40px -18px rgba(20,83,45,.55); transition: transform .15s ease, box-shadow .15s ease; }
+.btn-utama:hover { transform: translateY(-1px); box-shadow: 0 20px 44px -16px rgba(20,83,45,.6); }
+.btn-utama:focus-visible { outline: 3px solid var(--light); outline-offset: 3px; }
+.jalur { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--deep), var(--accent) 45%, #4ADE80); margin: 8px 0; }
 a.btn-primary { text-decoration: none; display: inline-flex; align-items: center; font-family: var(--f-body); font-weight: 700; font-size: 15px; border-radius: 999px; padding: 12px 24px; }
 .hero .btn-ghost { font-size: 15px; padding: 12px 22px; }
 a.btn-ghost { text-decoration: none; display: inline-flex; align-items: center; font-family: var(--f-body); font-weight: 700; font-size: 14px; border-radius: 999px; padding: 10px 20px; border: 1px solid var(--line-accent); }
@@ -403,7 +407,7 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
       <h1>Dasbor <span class="grad">Tracer Study</span> Prodi</h1>
       <p class="lead">Satu file paket dari CEDC, tiga keluaran siap pakai untuk rapat pimpinan dan akreditasi.</p>
       <div class="btns">
-        <a class="btn-primary" href="#sec-upload">Mulai unggah</a>
+        <a class="btn-utama" href="#sec-upload">Mulai unggah</a>
         <button class="btn-ghost" data-guide type="button">Panduan singkat</button>
         <button class="btn-link" data-example type="button">Lihat contoh</button>
       </div>
@@ -480,8 +484,8 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
       <p>Dua langkah. File paket hanya diterbitkan CEDC.</p>
     </div>
     <ol class="flow">
-      <li><span class="fl-n">1</span><div><b>Minta file paket ke CEDC</b><span>Satu file .xlsx per prodi. Kontak CEDC ada di bagian bawah halaman.</span><a href="#kontak">Lihat kontak</a></div></li>
-      <li><span class="fl-n">2</span><div><b>Unggah, lalu tekan Gabungkan dan tampilkan</b><span>Beberapa prodi dari fakultas yang sama boleh diunggah sekaligus. Setiap prodi mendapat tab sendiri.</span></div></li>
+      <li><span class="fl-n">01</span><div><b>Minta file paket ke CEDC</b><span>Satu file .xlsx per prodi. Kontak CEDC ada di bagian bawah halaman.</span><a href="#kontak">Lihat kontak</a></div></li>
+      <li><span class="fl-n">02</span><div><b>Unggah, lalu tekan Gabungkan dan tampilkan</b><span>Beberapa prodi dari fakultas yang sama boleh diunggah sekaligus. Setiap prodi mendapat tab sendiri.</span></div></li>
     </ol>
     <div class="card">
       <label class="drop" id="drop" tabindex="0">
@@ -598,6 +602,8 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
       </div>
     </div>
   </dialog>
+
+  <div class="jalur" role="presentation"></div>
 
   <section class="contact" id="kontak" aria-labelledby="h-contact">
     <h2 id="h-contact">Kantor dan kontak</h2>
