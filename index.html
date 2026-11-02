@@ -120,6 +120,12 @@ details.set summary { cursor: pointer; font-weight: 700; color: var(--deep); }
 .pk-cek li { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; color: var(--ink2); }
 .pk-name { margin: 12px 0 10px; font-size: 13.5px; color: var(--ink2); overflow-wrap: anywhere; }
 a.btn-ghost { text-decoration: none; display: inline-flex; align-items: center; font-family: var(--f-body); font-weight: 700; font-size: 14px; border-radius: 999px; padding: 10px 20px; border: 1px solid var(--line-accent); }
+.fguide { margin-top: 14px; padding: 12px 16px; border-radius: 12px; background: var(--soft); border: 1px solid var(--line-accent); font-size: 13.5px; color: var(--ink2); }
+.fguide b { color: var(--deep); }
+.fguide ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+#pptNamePreview { overflow-wrap: anywhere; font-weight: 600; }
+.chip small.ver { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+.chip[aria-pressed="true"] small.ver { color: inherit; opacity: .85; }
 .set-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 12px; }
 .set label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink2); }
 .set label span { font-weight: 400; color: var(--muted); font-size: 12.5px; }
@@ -404,7 +410,13 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
         <div class="vtabs" id="tabs" role="tablist" aria-label="Versi kuesioner"></div>
         <nav class="secnav" id="secNav" aria-label="Bagian dasbor"></nav>
       </div>
-      <div class="panel" id="filterPanel" hidden><div class="filters" id="filters"></div></div>
+      <div class="panel" id="filterPanel" hidden><div class="filters" id="filters"></div>
+        <div class="fguide"><b>Penting sebelum mengunduh PPT</b><ul>
+          <li>PPT diunduh sesuai filter tahun lulus yang sedang dipilih. Filter ini berlaku untuk tab Versi 2021 dan Versi 2019 sekaligus.</li>
+          <li>Bila tahun lulus <b>Semua</b>, PPT memuat semua lulusan.</li>
+          <li>Lampiran kuesioner versi 2019 hanya muncul bila ada alumni versi 2019 pada tahun lulus yang dipilih.</li>
+          <li>Nama file PPT mencantumkan pilihan filter. File yang akan diunduh: <b id="pptNamePreview"></b></li>
+        </ul></div></div>
       <div class="panel set" id="settingsPanel" hidden><div id="settings">
       <div class="set-grid">
         <label for="setTargetIku">Target IKU 2 (%)<span>Kosongkan bila belum ada. Garis target muncul di kartu bila diisi.</span><input type="text" id="setTargetIku" inputmode="decimal" placeholder="mis. 65"></label>
@@ -1122,7 +1134,7 @@ function flipWrap(cls, front, back){
 }
 let REP = null;
 function card(o){
-  if (REP) REP.cards.push({ q: o.q, title: o.title, back: o.back || [], ppt: o.ppt, wide: !!o.wide });
+  if (REP) REP.cards.push({ key: o.key || null, q: o.q, title: o.title, back: o.back || [], ppt: o.ppt, wide: !!o.wide });
   const front = '<div class="card-top"><p class="q">' + o.q + '</p><span class="info-chip">i&nbsp;Detail teknis</span></div><h3 class="insight">' + o.title + "</h3>" + o.body;
   return flipWrap("card chart-card" + (o.wide ? " wide" : ""), front, tech(o.back || []));
 }
@@ -1138,8 +1150,10 @@ const C5 = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--neg)", "var(--neg2)"];
 const C5L = ["var(--c1)", "var(--c2)", "var(--neu)", "var(--neg)", "var(--neg2)"];
 const pctTarget = s => { const v = parseFloat(String(s || "").replace(",", ".")); return isNaN(v) ? null : v; };
 function tabRows(v){ return state.compiled.kept.filter(x => x.v === v); }
+// satu filter untuk kedua versi kuesioner: tahun lulus yang dipilih berlaku di tab Versi 2021, tab Versi 2019, dan PPT
+const fShared = () => state.filters.all || (state.filters.all = { tahun: new Set(), jenis: "" });
 function filtered(v){
-  const f = state.filters[v] || (state.filters[v] = { tahun: new Set(), jenis: "" });
+  const f = fShared();
   return tabRows(v).filter(x => (!f.tahun.size || f.tahun.has(String(x.m.tahun ?? "Kosong"))) && (!f.jenis || (f.jenis === "pre" ? x.m.pre : !x.m.pre)));
 }
 function yrText(list){
@@ -1167,17 +1181,19 @@ function renderTabs(){
   $("tabs").innerHTML = vs.map(v => '<button class="tab" role="tab" data-tab="' + v + '" aria-selected="' + (state.tab === v) + '" title="' + esc(yearRange(v)) + '">' + VERSIONS[v].label + ' <span class="num">' + fmt(tabRows(v).length) + "</span></button>").join("");
 }
 function renderFilters(){
-  const v = state.tab, f = state.filters[v] || (state.filters[v] = { tahun: new Set(), jenis: "" });
-  const rows = tabRows(v); const cnt = {}; rows.forEach(x => { const k = String(x.m.tahun ?? "Kosong"); cnt[k] = (cnt[k] || 0) + 1; });
-  const years = Object.keys(cnt).sort(); const w = waktuText(rows);
-  $("filters").innerHTML = '<div class="frow"><span class="flabel">Tahun lulus</span><button class="chip" data-f="tahun" data-v="" aria-pressed="' + (!f.tahun.size) + '">Semua</button>' + years.map(y => '<button class="chip" data-f="tahun" data-v="' + esc(y) + '" aria-pressed="' + f.tahun.has(y) + '">' + esc(y) + ' <span class="num" style="opacity:.7">' + cnt[y] + "</span></button>").join("") + "</div>" +
+  const v = state.tab, f = fShared(), other = v === "v2021" ? "v2019" : "v2021";
+  const rows = tabRows(v); const cnt = {}, cntO = {}; rows.forEach(x => { const k = String(x.m.tahun ?? "Kosong"); cnt[k] = (cnt[k] || 0) + 1; });
+  tabRows(other).forEach(x => { const k = String(x.m.tahun ?? "Kosong"); cntO[k] = (cntO[k] || 0) + 1; });
+  const years = [...new Set(Object.keys(cnt).concat(Object.keys(cntO)))].sort(); const w = waktuText(rows);
+  $("filters").innerHTML = '<div class="frow"><span class="flabel">Tahun lulus</span><button class="chip" data-f="tahun" data-v="" aria-pressed="' + (!f.tahun.size) + '">Semua</button>' + years.map(y => '<button class="chip" data-f="tahun" data-v="' + esc(y) + '" aria-pressed="' + f.tahun.has(y) + '" title="' + esc((cnt[y] || 0) + " alumni " + VERSIONS[v].label.toLowerCase() + (cntO[y] ? ", " + cntO[y] + " alumni " + VERSIONS[other].label.toLowerCase() : "")) + '">' + esc(y) + ' <span class="num" style="opacity:.7">' + (cnt[y] || 0) + "</span>" + (cntO[y] ? ' <small class="ver">+' + cntO[y] + " " + VERSIONS[other].label.toLowerCase() + "</small>" : "") + "</button>").join("") + "</div>" +
     '<div class="frow"><span class="flabel">Waktu mengisi</span>' + [["", "Semua"], ["pre", "Sebelum wisuda" + (w.preY ? ", lulusan " + w.preY : "") + " (" + w.pre.length + ")"], ["post", "Setelah lulus" + (w.postY ? ", lulusan " + w.postY : "") + " (" + w.post.length + ")"]].map(o => '<button class="chip" data-f="jenis" data-v="' + o[0] + '" aria-pressed="' + (f.jenis === o[0]) + '">' + esc(o[1]) + "</button>").join("") + "</div>";
   $("preYears").innerHTML = '<span class="flabel">Diisi sebelum wisuda</span>' + [...new Set(state.compiled.kept.map(x => x.m.tahun).filter(y => y != null))].sort().map(y => '<button class="chip" data-pre="' + y + '" aria-pressed="' + state.settings.pre.includes(y) + '">Lulusan ' + y + "</button>").join("");
   const ws = state.settings.wisuda || (state.settings.wisuda = {});
   $("wisudaDates").innerHTML = state.settings.pre.slice().sort((a, b) => b - a).map(y => '<label>Tanggal wisuda lulusan ' + y + '<span>UNPRI mengadakan wisuda dua kali setahun. Bila diisi, alumni dihitung "sebelum wisuda" bila tanggal pengisiannya tidak melewati wisuda terakhir tahun itu.</span><span style="display:flex;gap:8px"><input type="date" data-wy="' + y + '" data-wk="0" value="' + esc((ws[y] || [])[0] || "") + '" aria-label="Wisuda pertama ' + y + '"><input type="date" data-wy="' + y + '" data-wk="1" value="' + esc((ws[y] || [])[1] || "") + '" aria-label="Wisuda kedua ' + y + '"></span></label>').join("") + (state.compiled.hasDaftar ? "" : '<p class="note">Tanggal wisuda baru berpengaruh bila daftar pengisian ikut diunggah, karena tanggal pengisian ada di file itu.</p>');
   $("setTargetIku").value = state.settings.targetIku; $("setTarget6").value = state.settings.target6; $("setUmp").value = state.settings.ump;
   const ft = [f.tahun.size ? "lulusan " + [...f.tahun].sort().join(", ") : "", f.jenis === "pre" ? "sebelum wisuda" : f.jenis === "post" ? "setelah lulus" : ""].filter(Boolean).join(" · ");
-  $("btnFilter").innerHTML = '<span class="lb-l">Filter: ' + esc(ft || "semua alumni") + '</span><span class="lb-s">Filter' + (ft ? " •" : "") + "</span>"; $("btnFilter").classList.toggle("on", !!ft);
+  if (state.compiled) $("pptNamePreview").textContent = pptFileName(state.compiled, f);
+  $("btnFilter").innerHTML = '<span class="lb-l">Filter: ' + esc(ft || "semua lulusan") + '</span><span class="lb-s">Filter' + (ft ? " •" : "") + "</span>"; $("btnFilter").classList.toggle("on", !!ft);
 }
 
 let SMALLN = false;
@@ -1186,8 +1202,8 @@ const tp = (a, b) => SMALLN || b < 30 ? fmt(a) + " dari " + fmt(b) : fpct(a, b);
 function renderDash(){
   const v = state.tab, V = VERSIONS[v], X = filtered(v), rows = X.map(x => x.r), M = X.map(x => x.m), N = X.length;
   const v21 = v === "v2021";
-  if (!N) { REP = null; $("dashBody").innerHTML = '<div class="msg warn">Tidak ada alumni pada filter ini. Ubah filter tahun lulus atau waktu mengisi.</div>'; return; }
-  REP = { v, N, cards: [], stats: [], sum: [], pre: null, filt: state.filters[v] };
+  if (!N) { REP = null; const o = v === "v2021" ? "v2019" : "v2021", no = tabRows(o).length ? filtered(o).length : 0; $("dashBody").innerHTML = '<div class="msg warn">Tidak ada alumni ' + VERSIONS[v].label.toLowerCase() + " pada filter ini." + (no ? " Ada " + fmt(no) + " alumni " + VERSIONS[o].label.toLowerCase() + "; lihat tab " + VERSIONS[o].label + ". PPT tetap bisa diunduh." : " Ubah filter tahun lulus atau waktu mengisi.") + "</div>"; return; }
+  REP = { v, N, cards: [], stats: [], sum: [], pre: null, filt: fShared() };
   SMALLN = N < 30;
   const thr = num(String(state.settings.ump).replace(/\D/g, "")) || DEFAULT_UMP;
   const tIku = pctTarget(state.settings.targetIku), t6 = pctTarget(state.settings.target6);
@@ -1244,6 +1260,7 @@ function renderDash(){
   if (ikuOK) sum.push("Perkiraan awal IKU 2 tanpa bobot: <b>" + fpct(counted, N) + "</b> alumni sudah terhitung (bekerja atau berwirausaha dalam 12 bulan setelah lulus, atau melanjutkan studi)" + (altAdd ? "; " + altTxt.replace(/IKU 2 menjadi (.*)$/, "angkanya menjadi <b>$1</b>") : "") + "." + (wRange ? " Dengan bobot gaji resmi, nilainya " + wRange + ", karena data pendapatan belum tersedia." : ""));
   else sum.push("<b>" + fpct(counted, N) + "</b> alumni bekerja atau berwirausaha dalam 12 bulan setelah lulus, atau melanjutkan studi" + (altAdd ? "; " + altTxt.replace(/IKU 2 menjadi (.*)$/, "angkanya menjadi <b>$1</b>") : "") + ". IKU 2 resmi hanya mengukur lulusan D1 sampai sarjana, sehingga untuk lulusan " + J.lulusan + " angka ini hanya pembanding.");
   REP.sum = sum.slice(); if (pre.length) REP.pre = { n: pre.length, N, lbl: preLbl };
+  REP.weighted = weighted; REP.years = [...new Set(M.map(m => m.tahun).filter(y => y != null))]; REP.outL = X.filter(x => x.inList === false).length;
   let html = '<div class="summary"><span class="eyebrow">Ringkasan</span><ol>' + sum.map(s => "<li>" + s + "</li>").join("") + "</ol>" + (N < 30 ? '<p class="note">Jumlah alumni di bawah 30 orang: satu orang sudah menggeser beberapa poin persen. Baca angka dengan hati-hati.</p>' : "") + "</div>";
   if (pre.length) html += '<div class="prewis"><span class="pill warn">Diisi sebelum wisuda</span><span>' + fmt(pre.length) + " dari " + fmt(N) + " alumni pada tampilan ini adalah " + esc(preLbl) + ". Angka mereka menggambarkan kondisi menjelang lulus, bukan hasil tracer study satu tahun setelah lulus. Pekerjaan dan nama perusahaan yang mereka isi tetap dihitung, karena banyak mahasiswa UNPRI sudah bekerja atau berwirausaha sebelum lulus.</span></div>";
 
@@ -1281,7 +1298,7 @@ function renderDash(){
   const links = []; X.forEach(x => { const f = x.m.detail, t = ikuCategory(x.m); const l = links.find(q => q.from === f && q.to === t); if (l) l.n++; else links.push({ from: f, to: t, n: 1 }); });
   const RC = { "Kerja ≤6 bulan": "var(--c1)", "Kerja 7 sampai 12 bulan": "var(--c2)", "Studi lanjut": "var(--c3)", "Kerja >12 bulan/tanpa data": "var(--neg)", "Belum terhitung": "var(--neg2)" };
   html += qsec("Seberapa cepat lulusan bekerja?", [
-    card({ ppt: { t: "bar", items: det.map((d, k) => ({ label: d.label, n: d.n, color: ["#3D107A", "#B794F6", "#8A2F7C", "#E59CD6", "#C9C6D3", "#E9E6F0"][k] })), base: N }, q: "Status alumni saat mengisi · " + fmt(N) + " alumni", title: tp(grp[0].n, N) + " alumni sudah bekerja atau berwirausaha" + small, body: donut(donutItems, N),
+    card({ key: "status", ppt: { t: "bar", items: det.map((d, k) => ({ label: d.label, n: d.n, color: ["#3D107A", "#B794F6", "#8A2F7C", "#E59CD6", "#C9C6D3", "#E9E6F0"][k] })), base: N }, q: "Status alumni saat mengisi · " + fmt(N) + " alumni", title: tp(grp[0].n, N) + " alumni sudah bekerja atau berwirausaha" + small, body: donut(donutItems, N),
       back: [["Pertanyaan", v21 ? "F8: Jelaskan status Anda saat ini?" : "F8: Apakah Anda bekerja saat ini? Status studi lanjut dan mencari kerja diambil dari F9 (situasi saat ini)."], ["Pengelompokan", "Bekerja atau berwirausaha = bekerja penuh/paruh waktu dan wiraswasta (dua irisan hijau tua). Lainnya = belum memungkinkan bekerja."], ["Rincian", v21 ? "F8, lima pilihan jawaban: 1 Bekerja, 2 Belum memungkinkan bekerja, 3 Wiraswasta, 4 Melanjutkan pendidikan, 5 Tidak kerja tetapi sedang mencari kerja. Studi lanjut hanya dihitung dari F8; isian F18 tidak dipakai karena banyak diisi oleh yang tidak melanjutkan studi." : "F8 (Ya/Tidak) dan F9. Wiraswasta = bekerja dengan jenis tempat kerja wiraswasta (F11 kode 4)."], ["Sumber", ver]] }),
     card({ ppt: { t: "col", items: bins.map(b => ({ label: b.label, n: b.n, color: b.color })), xTitle: "Bulan setelah lulus" + (v21 ? " (0 = langsung bekerja saat lulus)" : ""), note: "Batang merah muda: lebih dari 6 bulan." }, q: "Lama mendapat pekerjaan pertama · " + fmt(wm.length) + " dari " + fmt(W) + " alumni yang bekerja mengisi jumlah bulan", title: wmMed != null ? (wmMed === 0 ? "Separuh dari " + fmt(wm.length) + " alumni yang mengisi masa tunggu sudah bekerja " + (v21 ? "saat lulus" : "sebelum lulus") : "Separuh dari " + fmt(wm.length) + " alumni yang mengisi masa tunggu mendapat pekerjaan dalam " + wmMed + " bulan atau kurang") : "Belum ada data masa tunggu", body: histogram(bins, markIdx >= 0 ? markIdx : null) + '<p class="note">Angka di bawah batang adalah jumlah bulan setelah lulus' + (v21 ? " (0 = langsung bekerja saat lulus)" : "") + '. Batang jingga: lebih dari 6 bulan.' + (W - wm.length ? " Tidak tampil: " + [le6NoMonth - yaOver > 0 ? fmt(le6NoMonth - yaOver) + " alumni menjawab dapat kerja dalam 6 bulan tanpa mengisi jumlah bulan" : "", yaOver ? fmt(yaOver) + " alumni menjawab dapat kerja dalam 6 bulan tetapi mengisi lebih dari 6 bulan" : "", inconsistent ? fmt(inconsistent) + " alumni dengan jawaban bertentangan" : "", noWait ? fmt(noWait) + " alumni tidak menjawab pertanyaan masa tunggu" : "", W - wm.length - le6NoMonth - inconsistent - noWait > 0 ? fmt(W - wm.length - le6NoMonth - inconsistent - noWait) + " alumni tanpa isian bulan" : ""].filter(Boolean).join("; ") + "." : "") + "</p>",
       back: [["Pertanyaan", v21 ? "F504: mendapat pekerjaan dalam 6 bulan? Bila Ya, lama bulan dari F502. Bila Tidak, lama bulan dari F506." : "F5: sebelum lulus (kode 1) atau sesudah lulus (kode 2); jumlah bulan dari F502 atau F503."], ["Data yang tidak dihitung", v21 ? fmt(inconsistent) + " alumni menjawab F504 = Tidak tetapi mengisi F506 kurang dari 7 bulan atau tidak sah. Jawaban ini bertentangan, sehingga lama masa tunggunya tidak dipakai." + (yaOver ? " " + fmt(yaOver) + " alumni menjawab F504 = Ya tetapi mengisi F502 lebih dari 6 bulan (bisa jadi yang diisi adalah lama bekerja sebelum lulus); mereka tetap dihitung dapat kerja dalam 6 bulan mengikuti jawaban Ya, tetapi tidak masuk grafik." : "") : "Alumni yang tidak mengisi F5 tidak masuk grafik."], ["Basis", "Hanya alumni yang bekerja atau berwirausaha dan mengisi jumlah bulan."], ["Hubungan dengan kartu " + fpct(le6, W), "Kartu angka di atas menghitung semua " + fmt(W) + " alumni yang bekerja, termasuk yang menjawab dapat kerja dalam 6 bulan tanpa mengisi jumlah bulan. Grafik ini hanya memuat yang mengisi jumlah bulan, jadi dipakai untuk melihat sebaran, bukan persentase."]] }),
@@ -1300,17 +1317,17 @@ function renderDash(){
   ]);
 
   /* ---------- 2. KESESUAIAN ---------- */
-  const yearsDesc = Object.keys(byYear).sort().reverse().filter(y => !state.filters[v].tahun.size || state.filters[v].tahun.has(String(y)));
+  const yearsDesc = Object.keys(byYear).sort().reverse().filter(y => !fShared().tahun.size || fShared().tahun.has(String(y)));
   const rowsBy = (col, k) => { const cnt = arr => Array.from({ length: k }, (_, i) => arr.filter(x => n_(x.r, col) === i + 1).length); const out = [{ label: "Semua", counts: cnt(work) }]; const rest = [];
     yearsDesc.forEach(y => { const arr = work.filter(x => String(x.m.tahun) === y); if (arr.length >= 10) out.push({ label: "Lulusan " + y, pre: state.settings.pre.includes(Number(y)), counts: cnt(arr) }); else if (arr.length) rest.push([y, arr]); });
-    if (rest.length) out.push({ label: "Angkatan lain: " + yrList(rest.map(q => Number(q[0]))), counts: cnt(rest.flatMap(q => q[1])) }); return out; };
+    if (rest.length && out.length > 1) out.push({ label: "Angkatan lain: " + yrList(rest.map(q => Number(q[0]))), counts: cnt(rest.flatMap(q => q[1])) }); return out; };
   const f14 = rowsBy("f14", 5), f14t = f14[0].counts.reduce((a, b) => a + b, 0), f14e = f14[0].counts[0] + f14[0].counts[1];
   const f15 = rowsBy("f15", 4), f15t = f15[0].counts.reduce((a, b) => a + b, 0);
   const grpNote = "Angkatan dengan kurang dari 10 alumni yang bekerja digabung agar persentasenya tidak menyesatkan.";
   html += qsec("Apakah pekerjaannya sesuai bidang studi?", [
-    card({ ppt: { t: "stack", rows: f14, series: Object.values(F14), pal: "likert" }, q: "Keterkaitan pekerjaan dengan bidang studi · " + fmt(f14t) + " alumni yang bekerja", title: tp(f14e, f14t) + " menilai pekerjaannya erat atau sangat erat dengan bidang studi", body: stackRows(f14, Object.values(F14).map((l, i) => ({ label: l, color: C5[i] }))),
+    card({ key: "f14", ppt: { t: "stack", rows: f14, series: Object.values(F14), pal: "likert" }, q: "Keterkaitan pekerjaan dengan bidang studi · " + fmt(f14t) + " alumni yang bekerja", title: tp(f14e, f14t) + " menilai pekerjaannya erat atau sangat erat dengan bidang studi", body: stackRows(f14, Object.values(F14).map((l, i) => ({ label: l, color: C5[i] }))),
       back: [["Pertanyaan", "F14: Seberapa erat hubungan antara bidang studi dengan pekerjaan Anda?"], ["Basis", "Hanya alumni yang bekerja atau berwirausaha."], ["Pengelompokan", grpNote], ["Tanda arsir", "Baris bergaris = angkatan yang mengisi sebelum wisuda."]] }),
-    card({ ppt: { t: "stack", rows: f15, series: Object.values(F15), pal: "f15" }, q: "Kesesuaian tingkat pendidikan dengan pekerjaan · " + fmt(f15t) + " alumni yang bekerja", title: tp(f15[0].counts[0] + f15[0].counts[1], f15t) + " bekerja di posisi yang membutuhkan pendidikan setingkat " + J.lulusan + (J.k === "S3" ? "" : " atau lebih tinggi"), body: stackRows(f15, Object.values(F15).map((l, i) => ({ label: l, color: ["var(--c2)", "var(--c1)", "var(--neg)", "var(--neg2)"][i] }))),
+    card({ key: "f15", ppt: { t: "stack", rows: f15, series: Object.values(F15), pal: "f15" }, q: "Kesesuaian tingkat pendidikan dengan pekerjaan · " + fmt(f15t) + " alumni yang bekerja", title: tp(f15[0].counts[0] + f15[0].counts[1], f15t) + " bekerja di posisi yang membutuhkan pendidikan setingkat " + J.lulusan + (J.k === "S3" ? "" : " atau lebih tinggi"), body: stackRows(f15, Object.values(F15).map((l, i) => ({ label: l, color: ["var(--c2)", "var(--c1)", "var(--neg)", "var(--neg2)"][i] }))),
       back: [["Pertanyaan", "F15: Tingkat pendidikan apa yang paling tepat/sesuai untuk pekerjaan Anda saat ini?"], ["Cara membaca", "Setingkat lebih tinggi dan tingkat yang sama berarti pekerjaan membutuhkan pendidikan setara jenjang lulusan atau lebih, sehingga pendidikannya terpakai penuh. Setingkat lebih rendah dan tidak perlu pendidikan tinggi berarti pendidikan alumni melebihi kebutuhan pekerjaannya."], ["Basis", "Hanya alumni yang bekerja atau berwirausaha."], ["Pengelompokan", grpNote]] })
   ]);
 
@@ -1320,7 +1337,7 @@ function renderDash(){
     card({ wide: true, ppt: { t: "matrix", pts: comp.map(p => ({ label: p.label, a: p.a, b: p.b })), meanA, meanB, gapMin: GAPMIN }, q: "Kompetensi yang dikuasai saat lulus dibanding yang dibutuhkan pekerjaan · " + comp.length + " kompetensi · " + fmt(compN) + (compWork ? " alumni yang bekerja" : " alumni"), title: (comp.length && maxGap <= GAPMIN ? "Penguasaan saat lulus dan kebutuhan pekerjaan untuk " + (comp.length === 7 ? "ketujuh" : "semua " + comp.length) + " kompetensi hampir sama; tidak ada selisih di atas 0,05 pada skala 1 sampai 5" : prio.length ? prio.length + " kompetensi perlu diprioritaskan: " + prio.slice(0, 3).map(p => esc(p.label)).join(", ") + (prio.length > 3 ? ", dan lainnya" : "") : ((n => n ? n + " dari " + comp.length + " kompetensi dikuasai di bawah kebutuhan pekerjaan (selisih di atas 0,05), tetapi tidak ada yang sekaligus paling dibutuhkan dan paling lemah" : "Tidak ada kompetensi yang sekaligus paling dibutuhkan dan paling lemah dikuasai")(comp.filter(p => p.b - p.a > GAPMIN).length))) + small,
       body: '<p class="note howto">Setiap titik satu kompetensi. Kotak kuning: dibutuhkan pekerjaan di atas rata-rata tetapi dikuasai saat lulus di bawah rata-rata, sehingga paling mendesak. Titik di atas garis jingga: kebutuhan lebih tinggi dari penguasaan.</p>' + matrix(comp.map(p => Object.assign({}, p))) + constNote,
       back: [["Pertanyaan", "F17 bagian A: tingkat kompetensi yang dikuasai saat lulus. F17 bagian B: tingkat yang diperlukan dalam pekerjaan saat ini. Skala 1 (sangat rendah) sampai 5 (sangat tinggi)."], ["Basis", compWork ? "Hanya " + fmt(compN) + " alumni yang bekerja atau berwirausaha dan menjawab kedua bagian, karena bagian B menanyakan kebutuhan pekerjaan saat ini. " + (nonWorkB ? fmt(nonWorkB) + " alumni yang belum bekerja juga mengisi bagian B (sistem mewajibkan); isian mereka tidak dipakai." : "") : "Semua alumni yang menjawab kedua bagian, karena alumni yang bekerja kurang dari 5 orang."], ["Cara membaca", "Setiap titik adalah satu kompetensi. Garis abu-abu putus-putus adalah rata-rata seluruh kompetensi (dikuasai " + fdec(meanA, 2) + ", dibutuhkan " + fdec(meanB, 2) + ") dan membagi empat kuadran. Garis jingga diagonal menandai dikuasai = dibutuhkan; makin jauh titik di atas garis ini, makin besar kekurangannya. Kedua sumbu memakai skala yang sama. Kompetensi disebut prioritas bila berada di kotak kuning, di atas garis jingga, dan selisihnya lebih dari 0,05."], ["Metode", "Importance-Performance Analysis (Martilla dan James, 1977) dengan garis rata-rata, ditambah garis diagonal (Abalo dkk., 2007). Dua cara ini bisa memberi hasil berbeda: kuadran menilai kedudukan relatif antarkompetensi, garis diagonal menilai kekurangan absolut. Selisih tiap kompetensi dirinci di kartu berikutnya."], constComp.length ? ["Tidak ditampilkan", constComp.map(p => esc(p.label) + " (kolom " + p.constant + " bernilai sama untuk semua alumni, kemungkinan tidak tersimpan di sistem)").join("; ")] : null] }),
-    card({ wide: true, ppt: { t: "dumb", pts: gaps.map(p => ({ label: p.label, a: p.a, b: p.b })) }, q: "Selisih setiap kompetensi · " + fmt(compN) + (compWork ? " alumni yang bekerja" : " alumni"), title: gaps.length && gaps[0].b - gaps[0].a > 0.05 ? "Selisih terbesar ada pada " + esc(gaps[0].label) + ": dibutuhkan " + fdec(gaps[0].b, 2) + ", dikuasai " + fdec(gaps[0].a, 2) : "Tidak ada selisih kompetensi yang berarti", body: dumbbell(comp),
+    card({ key: "dumb", wide: true, ppt: { t: "dumb", pts: gaps.map(p => ({ label: p.label, a: p.a, b: p.b })) }, q: "Selisih setiap kompetensi · " + fmt(compN) + (compWork ? " alumni yang bekerja" : " alumni"), title: gaps.length && gaps[0].b - gaps[0].a > 0.05 ? "Selisih terbesar ada pada " + esc(gaps[0].label) + ": dibutuhkan " + fdec(gaps[0].b, 2) + ", dikuasai " + fdec(gaps[0].a, 2) : "Tidak ada selisih kompetensi yang berarti", body: dumbbell(comp),
       back: [["Pertanyaan", "F17 bagian A: Pada saat lulus, pada tingkat mana kompetensi di bawah ini Anda kuasai? F17 bagian B: Pada saat ini, pada tingkat mana kompetensi di bawah ini diperlukan dalam pekerjaan?"], ["Skala", "Jawaban 1 sampai 5: 1 sangat rendah, 5 sangat tinggi. Angka 2, 3, dan 4 tidak punya label di kuesioner. Yang ditampilkan adalah rata-rata alumni yang bekerja dan menjawab kedua bagian."], ["Cara membaca", "Setiap baris satu kompetensi. Titik kosong = rata-rata yang dikuasai saat lulus, titik penuh = rata-rata yang dibutuhkan pekerjaan. Penggaris di atas menunjukkan posisi skala (dipotong mulai angka terendah yang relevan agar jaraknya terlihat)."], ["Angka di kanan", "'Kurang' (merah) berarti kebutuhan pekerjaan lebih tinggi dari yang dikuasai saat lulus. 'Lebih' (hijau) berarti sebaliknya. Di bawahnya: nilai dikuasai → nilai dibutuhkan."], ["Urutan", "Dari selisih kekurangan terbesar ke terkecil."]] })
   ]);
 
@@ -1332,7 +1349,7 @@ function renderDash(){
   const appBad = S.length - appRows.length, tA = appRows.reduce((t, q) => t + q[0], 0), tR = appRows.reduce((t, q) => t + q[1], 0), tW = appRows.reduce((t, q) => t + q[2], 0);
   const applied = appRows.filter(q => q[0] > 0), m6 = median(applied.map(q => q[0]).sort((a, b) => a - b)), sameApp = applied.filter(q => q[0] === q[1] && q[1] === q[2]).length;
   html += qsec("Lewat jalur apa mereka mendapat kerja?", [
-    card({ ppt: { t: "bar", items: f4s.filter(q => q.n > 0).map(q => ({ label: q.label, n: q.n, color: q.code === "f408" ? "hi" : null })), base: S.length, note: "Batang merah muda: pusat karir kampus. Jawaban boleh lebih dari satu." }, q: "Jalur mencari kerja · alumni boleh memilih lebih dari satu · " + fmt(S.length) + " alumni yang pernah mencari kerja", title: f4s[0] && f4s[0].n ? esc(f4s[0].label) + " menjadi jalur terbanyak (" + tp(f4s[0].n, S.length) + "); pusat karir kampus " + tp(pk.n, S.length) : "Belum ada jawaban", body: barList(f4, S.length, { sort: true, hideZero: true, hi: q => q.code === "f408" }) + '<p class="note">Batang hijau tua: pusat karir kampus.</p>',
+    card({ key: "jalur", ppt: { t: "bar", items: f4s.filter(q => q.n > 0).map(q => ({ label: q.label, n: q.n, color: q.code === "f408" ? "hi" : null })), base: S.length, note: "Batang merah muda: pusat karir kampus. Jawaban boleh lebih dari satu." }, q: "Jalur mencari kerja · alumni boleh memilih lebih dari satu · " + fmt(S.length) + " alumni yang pernah mencari kerja", title: f4s[0] && f4s[0].n ? esc(f4s[0].label) + " menjadi jalur terbanyak (" + tp(f4s[0].n, S.length) + "); pusat karir kampus " + tp(pk.n, S.length) : "Belum ada jawaban", body: barList(f4, S.length, { sort: true, hideZero: true, hi: q => q.code === "f408" }) + '<p class="note">Batang hijau tua: pusat karir kampus.</p>',
       back: [["Pertanyaan", "F4: Bagaimana Anda mencari pekerjaan tersebut? Jawaban boleh lebih dari satu, sehingga total persentase lebih dari 100%."], ["Basis", "Alumni yang mencari kerja atau sudah bekerja (F3 tidak memilih 'tidak mencari kerja', atau status bekerja/mencari kerja)."]] }),
     card({ ppt: tA ? { t: "col", items: [{ label: "Lamaran dikirim", n: tA }, { label: "Direspons perusahaan", n: tR }, { label: "Undangan wawancara", n: tW }], note: fmt(applied.length) + " alumni pernah melamar; separuhnya mengirim " + fdec(m6, 0) + " lamaran atau kurang." + (sameApp ? " " + fmt(sameApp) + " dari " + fmt(applied.length) + " alumni mengisi angka yang sama untuk lamaran, respons, dan wawancara." : "") } : null, q: "Proses melamar sebelum pekerjaan pertama · " + fmt(appRows.length) + " alumni", title: tA ? (applied.length && sameApp * 2 >= applied.length ? "Data lamaran belum bisa dibaca: " + tp(sameApp, applied.length) + " alumni yang melamar mengisi angka yang sama untuk lamaran, respons, dan wawancara" : fpct(tR, tA) + " lamaran mendapat respons dan " + fpct(tW, tA) + " berujung undangan wawancara") : "Belum ada data lamaran", body: tA ? funnel([{ label: "lamaran dikirim", v: tA, sub: "total dari " + fmt(appRows.length) + " alumni" }, { label: "direspons perusahaan", v: tR }, { label: "undangan wawancara", v: tW }]) + '<p class="note">' + fmt(applied.length) + " alumni pernah melamar; separuhnya mengirim " + fdec(m6, 0) + " lamaran atau kurang. " + fmt(appRows.length - applied.length) + " alumni tidak melamar (misalnya sudah bekerja sebelum lulus atau berwirausaha)." + (sameApp ? " " + fmt(sameApp) + " dari " + fmt(applied.length) + " alumni mengisi angka yang sama untuk lamaran, respons, dan wawancara; wajar bila hanya melamar sedikit, tetapi bila porsinya besar bisa jadi isian asal." : "") + "</p>" : "",
       back: [["Pertanyaan", "F6: berapa perusahaan yang Anda lamar sebelum memperoleh pekerjaan pertama? F7: berapa yang merespons? F7A: berapa yang mengundang wawancara?"], ["Perhitungan", "Jumlah seluruh lamaran, respons, dan undangan wawancara, lalu dibandingkan dengan jumlah lamaran. Satu corong memakai kelompok alumni yang sama di setiap tahap. Alumni yang melamar ke banyak perusahaan lebih berpengaruh pada persentase ini."], ["Tidak dihitung", fmt(appBad) + " alumni dengan isian kosong, negatif, 500 ke atas, atau tidak berurutan (respons lebih banyak dari lamaran, atau wawancara lebih banyak dari respons)."]] })
@@ -1344,7 +1361,7 @@ function renderDash(){
   const f11s = f11.slice().sort((a, b) => b.n - a.n).sort((a, b) => isRest(a) - isRest(b)), f11t = f11.reduce((t, q) => t + q.n, 0);
   // basis = alumni yang menjawab pertanyaan itu, agar batang berjumlah 100%; yang tidak menjawab disebut di judul kecil
   const ansQ = (lbl, n) => lbl + " · " + (n < W ? fmt(n) + " dari " + fmt(W) + " alumni yang bekerja menjawab" : fmt(W) + " alumni yang bekerja");
-  const s5 = [card({ ppt: { t: "bar", items: f11s.filter(q => q.n > 0), base: f11t }, q: ansQ("Jenis tempat kerja", f11t), title: f11s[0] && f11s[0].n ? tp(f11s[0].n, f11t) + " bekerja di " + esc(f11s[0].label.toLowerCase()) : "Belum ada data", body: barList(f11, f11t, { sort: true, hideZero: true }),
+  const s5 = [card({ key: "f11", ppt: { t: "bar", items: f11s.filter(q => q.n > 0), base: f11t }, q: ansQ("Jenis tempat kerja", f11t), title: f11s[0] && f11s[0].n ? tp(f11s[0].n, f11t) + " bekerja di " + esc(f11s[0].label.toLowerCase()) : "Belum ada data", body: barList(f11, f11t, { sort: true, hideZero: true }),
     back: [["Pertanyaan", "F11: Apa jenis perusahaan/instansi/institusi tempat Anda bekerja sekarang?"], ["Catatan kode", v21 ? "Kode 6 (BUMN/BUMD) cocok dengan isian nama perusahaan; kode 7 (Multilateral) belum terkonfirmasi di layar sistem." : "Versi 2019: instansi pemerintah termasuk BUMN."]] })];
   if (v21) {
     // lokasi: kabupaten/kota dari F510; provinsi diturunkan dari dua digit awal kode kabupaten/kota agar selalu konsisten
@@ -1364,7 +1381,7 @@ function renderDash(){
   if (hasIncome) {
     const inc = work.map(x => x.m.income).filter(q => q !== null);
     const ib = [["Rp2 juta ke bawah", q => q >= 100000 && q < 2e6, "var(--neg2)"], ["Rp2 juta sampai di bawah Rp3 juta", q => q >= 2e6 && q < 3e6, "var(--neg)"], ["Rp3 juta sampai di bawah ambang", q => q >= 3e6 && q < thr, "var(--c3)"], ["Di atas ambang 1,2× UMP", q => q >= thr, "var(--c1)"], ["Isian tidak valid", q => q < 100000, "var(--neu)"]].map(([l, fn, c]) => ({ label: l, n: inc.filter(fn).length, color: c }));
-    s5.push(card({ ppt: { t: "bar", items: ib, base: inc.length }, q: "Pendapatan dari pekerjaan utama · " + fmt(inc.length) + " alumni yang bekerja", title: tp(ib[3].n, inc.length) + " berpenghasilan di atas 1,2× UMP (Rp" + fmt(thr) + ")", body: barList(ib, inc.length),
+    s5.push(card({ key: "income", ppt: { t: "bar", items: ib, base: inc.length }, q: "Pendapatan dari pekerjaan utama · " + fmt(inc.length) + " alumni yang bekerja", title: tp(ib[3].n, inc.length) + " berpenghasilan di atas 1,2× UMP (Rp" + fmt(thr) + ")", body: barList(ib, inc.length),
       back: [["Pertanyaan", "F13-01: pendapatan per bulan dari pekerjaan utama (rupiah)."], ["Ambang", "1,2× UMP sesuai IKU 2; default UMP Sumatera Utara 2026 Rp3.228.971, bisa diubah di Pengaturan."], ["Isian tidak valid", "Di bawah Rp100 ribu, kemungkinan diketik dalam juta atau salah ketik."]] }));
   }
     // kartu lokasi (paling tinggi) di kiri; jenis dan skala tempat kerja ditumpuk di kanan agar tinggi kedua kolom seimbang
@@ -1381,7 +1398,7 @@ function renderDash(){
     back: [["Pertanyaan", "F2: Menurut Anda seberapa besar penekanan pada metode pembelajaran di bawah ini dilaksanakan di program studi Anda?"], ["Cara membaca", "Setiap batang 100% alumni yang menjawab. Hijau tua dan hijau = sangat besar dan besar, dimulai dari kiri agar mudah dibandingkan antarbaris. Abu-abu = cukup besar. Jingga dan merah = kurang dan tidak sama sekali."], ["Mengapa bukan grafik dua arah", "Grafik dua arah (diverging) memaksa jawaban tengah dibagi dua ke sisi positif dan negatif, padahal 'cukup besar' bukan penilaian negatif. Batang 100% menampilkan semua jawaban apa adanya."]] })]);
 
   /* ---------- 7. PROFIL ---------- */
-  const mcols = Object.keys(byYear).sort().map(y => { const arr = byYear[y].filter(x => (!state.filters[v].jenis || (state.filters[v].jenis === "pre" ? x.m.pre : !x.m.pre))); return { label: y, n: arr.length, pre: state.settings.pre.includes(Number(y)), counts: GROUPS.map(g => arr.filter(x => x.m.group === g[0]).length) }; }).filter(c => c.n);
+  const mcols = Object.keys(byYear).sort().map(y => { const arr = byYear[y].filter(x => (!fShared().jenis || (fShared().jenis === "pre" ? x.m.pre : !x.m.pre))); return { label: y, n: arr.length, pre: state.settings.pre.includes(Number(y)), counts: GROUPS.map(g => arr.filter(x => x.m.group === g[0]).length) }; }).filter(c => c.n);
   const mtot = mcols.reduce((s, c) => s + c.n, 0), big = mcols.slice().sort((a, b) => b.n - a.n)[0];
   const heat = '<div class="tbl-wrap"><table class="heat"><thead><tr><th>Tahun lulus</th><th>Alumni</th>' + GROUPS.map(g => "<th>" + esc(g[1].replace(" (belum memungkinkan bekerja)", "")) + "</th>").join("") + "<th>Kerja ≤6 bulan<br><small style=\"font-weight:400\">dari yang bekerja</small></th></tr></thead><tbody>" + mcols.slice().reverse().map(c => { const arr = byYear[c.label]; const w = arr.filter(x => x.m.work); return "<tr" + (c.n < 10 ? ' class="smalln"' : "") + "><td>" + esc(c.label) + (c.pre ? '<span class="tag-pre">diisi sebelum wisuda</span>' : "") + '</td><td class="num">' + fmt(c.n) + "</td>" + c.counts.map((q, i) => { const p = pctNum(q, c.n); const base = [[20, 83, 45], [74, 222, 128], [217, 119, 6], [139, 151, 142]][i]; return '<td class="cell" style="background:rgba(' + base.join(",") + "," + (0.08 + p / 100 * 0.8).toFixed(2) + ");color:" + (p > 55 && i === 0 ? "#fff" : "var(--ink)") + '">' + fpct(q, c.n) + "</td>"; }).join("") + '<td class="num">' + (w.length ? fpct(w.filter(x => x.m.le6).length, w.length) : "-") + "</td></tr>"; }).join("") + "</tbody></table></div>";
   const seek = X.filter(x => x.m.group === "cari"), seekA = seek.filter(x => F10[n_(x.r, "f1001")] !== undefined).length;
@@ -1436,7 +1453,7 @@ function renderDash(){
     outL ? ["Di luar periode", fmt(outL) + " alumni tidak ada di daftar pengisian periode tarikan ini, tetapi tetap dihitung."] : null,
     ["Angka kecil", "Bila basis di bawah 30 orang, judul memakai jumlah orang, bukan persen."]
   ].filter(Boolean);
-  qcards.push(card({ wide: true, ppt: { t: "method", items: meth }, q: "Metode dan asumsi · tafsiran yang memengaruhi angka di dasbor dan PPT", title: "Cara angka di laporan ini dihitung", body: '<ul class="facts meth">' + meth.map(f => "<li><b>" + esc(f[0]) + "</b><span>" + esc(f[1]) + "</span></li>").join("") + "</ul>",
+  qcards.push(card({ key: "method", wide: true, ppt: { t: "method", items: meth }, q: "Metode dan asumsi · tafsiran yang memengaruhi angka di dasbor dan PPT", title: "Cara angka di laporan ini dihitung", body: '<ul class="facts meth">' + meth.map(f => "<li><b>" + esc(f[0]) + "</b><span>" + esc(f[1]) + "</span></li>").join("") + "</ul>",
     back: [["Mengapa ada", "Setiap angka di dasbor dan PPT bergantung pada beberapa keputusan cara hitung. Daftar ini mengungkapkan keputusan itu agar pembaca tahu batas tafsirnya."]] }));
   html += qsec("Seberapa andal datanya?", qcards);
   $("dashBody").innerHTML = html;
@@ -1753,7 +1770,7 @@ $("btnExitExample").addEventListener("click", () => { resetAll(); $("sec-upload"
 $("dashBody").addEventListener("click", e => { const c = e.target.closest(".flip"); if (!c) return; if (e.target.closest("a, input, select, textarea, summary")) return; if (String(window.getSelection ? window.getSelection() : "").length) return; const on = c.classList.toggle("flipped"); c.setAttribute("aria-pressed", String(on)); });
 $("dashBody").addEventListener("keydown", e => { const c = e.target.closest(".flip"); if (!c || e.target !== c || (e.key !== "Enter" && e.key !== " ")) return; e.preventDefault(); const on = c.classList.toggle("flipped"); c.setAttribute("aria-pressed", String(on)); });
 $("tabs").addEventListener("click", e => { const b = e.target.closest(".tab"); if (!b) return; state.tab = b.dataset.tab; renderTabs(); renderFilters(); renderDash(); renderBar(); });
-$("filters").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; const f = state.filters[state.tab]; const val = b.dataset.v;
+$("filters").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; const f = fShared(); const val = b.dataset.v;
   if (b.dataset.f === "jenis") f.jenis = val; else { if (!val) f.tahun.clear(); else if (f.tahun.has(val)) f.tahun.delete(val); else f.tahun.add(val); }
   renderFilters(); renderDash(); });
 $("preYears").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; const y = Number(b.dataset.pre); const p = state.settings.pre; const i = p.indexOf(y); if (i >= 0) p.splice(i, 1); else p.push(y); p.sort(); saveSettings(); renderAll(); });
@@ -1841,7 +1858,12 @@ async function doExcel(i){
 async function doPpt(i){
   if (i !== state.gi) switchGroup(i);
   const btn = $("btnPpt"); busy(btn, true, "Menyiapkan...");
-  try { const { pptx, name } = await buildPpt(); const blob = await pptx.write({ outputType: "blob" });
+  try { const keepTab = state.tab, reps = {};
+    ["v2021", "v2019"].forEach(v => { if (tabRows(v).length) { state.tab = v; renderDash(); reps[v] = REP; } });
+    state.tab = keepTab; renderDash();
+    const main = reps.v2021 || reps.v2019, app = reps.v2021 && reps.v2019 ? reps.v2019 : null;
+    if (!main) throw new Error("Tidak ada alumni pada filter tahun lulus ini. Ubah filter lalu unduh lagi.");
+    const { pptx, name } = await buildPpt(main, app, { noV21: !reps.v2021 && tabRows("v2021").length > 0 }); const blob = await pptx.write({ outputType: "blob" });
     const res = await saveFile(name, blob);
     $("dashMsg").innerHTML = res === "declined" ? '<div class="msg warn">Unduhan dibatalkan.</div>' : '<div class="msg ok">PPT siap: ' + esc(name) + "</div>";
   } catch (e) { $("dashMsg").innerHTML = '<div class="msg bad">PPT gagal dibuat. Muat ulang halaman lalu coba lagi. Detail: ' + esc(e && (e.message || e.code) || e) + "</div>"; }
@@ -2098,15 +2120,25 @@ async function gradText(text, from, to, px, maxW){
   lines.forEach((l, i) => c.fillText(l, pad, pad + i * lh));
   return { data: cv.toDataURL("image/png"), w: W / scale / 96, h: H / scale / 96 };
 }
-function pptFileName(c, v){
-  const per = c.period ? fmtTgl(c.period.from) + " sd " + fmtTgl(c.period.to) : "";
-  return (state.example ? "CONTOH_" : "") + "Laporan Tracer Study_" + prodiShortOf(c) + (per ? "_" + per : "") + "_" + VERSIONS[v].label + ".pptx";
+// teks filter untuk judul, cover, dan nama file: "Semua lulusan", "Lulusan 2023 dan 2024", "Lulusan 2016 sampai 2020"
+function lulusanText(f){
+  const ys = f && f.tahun ? [...f.tahun].filter(y => y !== "Kosong").map(Number) : [];
+  if (!ys.length) return "Semua lulusan";
+  const t = yrList(ys), i = t.lastIndexOf(", ");
+  return "Lulusan " + (i > 0 ? t.slice(0, i) + " dan " + t.slice(i + 2) : t);
 }
-async function buildPpt(){
+function jenisText(f){ return f && f.jenis === "pre" ? "Diisi sebelum wisuda" : f && f.jenis === "post" ? "Diisi setelah lulus" : ""; }
+function pptFileName(c, f){
+  const per = c.period ? fmtTgl(c.period.from) + " sd " + fmtTgl(c.period.to) : "";
+  return [(state.example ? "CONTOH " : "") + "Laporan Tracer Study", prodiShortOf(c), lulusanText(f), jenisText(f), per ? "Periode isi " + per : ""].filter(Boolean).join("_").replace(/[\\/:*?"<>|]/g, "") + ".pptx";
+}
+// R = hasil dasbor kuesioner utama (versi 2021 bila ada), A = hasil versi 2019 untuk lampiran (boleh null)
+async function buildPpt(R, A, opt){
   if (!window.PptxGenJS) await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js");
-  if (!REP) throw new Error("Belum ada data di dasbor untuk filter ini.");
+  opt = opt || {}; const REP = R;
+  if (!REP) throw new Error("Tidak ada alumni pada filter ini.");
   const c = state.compiled, v = REP.v, prodi = prodiShortOf(c), per = c.period ? periodText(c.period) : "", N = REP.N;
-  const f = REP.filt || {}, filtTxt = [f.tahun && f.tahun.size ? "lulusan " + [...f.tahun].sort().join(", ") : "", f.jenis === "pre" ? "hanya yang mengisi sebelum wisuda" : f.jenis === "post" ? "hanya yang mengisi setelah lulus" : ""].filter(Boolean).join("; ");
+  const f = REP.filt || {}, lulTxt = lulusanText(f), jnsTxt = jenisText(f), filtTxt = [f.tahun && f.tahun.size ? lulTxt.toLowerCase() : "", jnsTxt.toLowerCase()].filter(Boolean).join("; ");
   const pptx = new PptxGenJS(); pptx.layout = "LAYOUT_WIDE"; pptx.author = "CARU CEDC UNPRI"; pptx.company = "Universitas Prima Indonesia"; pptx.title = "Laporan Tracer Study " + prodi;
   const footTxt = "Tracer Study " + prodi + (per ? " · " + per : "") + " · CARU CEDC UNPRI";
   let page = 0;
@@ -2137,9 +2169,11 @@ async function buildPpt(){
   }
   function chartStack(s, spec, x, y, w, h){
     const rows = spec.rows.filter(r => r.counts.reduce((a, b) => a + b, 0) > 0); if (!rows.length) return;
-    const legH = 0.32, labW = Math.min(2.8, w * 0.28), rightW = spec.right ? 0.9 : 0, bw = w - labW - rightW - 0.1;
+    const labW = Math.min(2.8, w * 0.28), rightW = spec.right ? 0.9 : 0, bw = w - labW - rightW - 0.1;
     const cols = spec.pal ? PAL[spec.pal] : (spec.colors || []).map(c => colOf(c) || PP.acc);
-    let lx = x + labW; spec.series.forEach((nm, i) => { const col = cols[i] || PP.acc; s.addShape(pptx.ShapeType.roundRect, { x: lx, y: y + 0.08, w: 0.16, h: 0.16, rectRadius: 0.03, fill: { color: col }, line: { color: col, width: 0.5 } }); const tw = 0.3 + nm.length * 0.075; s.addText(nm, { x: lx + 0.2, y: y, w: tw, h: 0.32, fontFace: FB, fontSize: 9.5, color: PP.ink2, margin: 0, valign: "middle" }); lx += tw + 0.35; });
+    let lx = x + labW, ly = y; spec.series.forEach((nm, i) => { const col = cols[i] || PP.acc, tw = 0.3 + nm.length * 0.075; if (lx > x + labW && lx + tw + 0.2 > x + w) { lx = x + labW; ly += 0.28; }
+      s.addShape(pptx.ShapeType.roundRect, { x: lx, y: ly + 0.08, w: 0.16, h: 0.16, rectRadius: 0.03, fill: { color: col }, line: { color: col, width: 0.5 } }); s.addText(nm, { x: lx + 0.2, y: ly, w: tw, h: 0.32, fontFace: FB, fontSize: 9.5, color: PP.ink2, margin: 0, valign: "middle" }); lx += tw + 0.35; });
+    const legH = ly - y + 0.32;
     const rh = Math.min(0.62, (h - legH - 0.1) / rows.length), bh = rh * 0.62;
     rows.forEach((r, i) => { const ry = y + legH + 0.12 + i * rh, tot = r.counts.reduce((a, b) => a + b, 0);
       s.addText(r.label + (r.pre ? " (sebelum wisuda)" : "") + "\n" + fmt(tot) + " alumni", { x, y: ry, w: labW - 0.1, h: bh, fontFace: FB, fontSize: 10, color: PP.ink2, margin: 0, valign: "middle", fit: "shrink" });
@@ -2218,7 +2252,7 @@ async function buildPpt(){
       if (lv) s.addText(lv === "Jingga" ? "Terisi paksa" : lv === "Kuning" ? "Bertentangan" : "Catatan", { x: x + w - 1.35, y: cy + (rh - 0.08) / 2 - 0.13, w: 1.3, h: 0.26, shape: pptx.ShapeType.roundRect, rectRadius: 0.13, fill: { color: lv === "Kuning" ? PP.runBg : lv === "Jingga" ? PP.soft2 : PP.soft }, line: { color: lv === "Kuning" ? PP.runLine : lv === "Jingga" ? PP.line2 : PP.line, width: 0.5 }, fontFace: FB, fontSize: 8.5, bold: true, color: col, align: "center", valign: "middle", margin: 0 }); });
   }
   function chartMethod(s, spec, x, y, w, h){
-    const items = spec.items.slice(0, 10), rh = h / items.length;
+    const items = spec.items.slice(0, 12), rh = h / items.length;
     items.forEach(([l, t], i) => { const cy = y + i * rh;
       if (i) s.addShape(pptx.ShapeType.line, { x, y: cy, w, h: 0, line: { color: PP.cardLine, width: 0.75 } });
       s.addText(plain(l), { x, y: cy, w: 1.9, h: rh, fontFace: FD, fontSize: 11, bold: true, color: PP.deep, valign: "middle", margin: 0 });
@@ -2258,24 +2292,27 @@ async function buildPpt(){
   pill(s, "Laporan Tracer Study", 0.75, 2.35);
   const ct = await gradText("Tracer Study\n" + prodi, PP.deep, PP.angL, 54, 900);
   const cw = Math.min(ct.w, 10.5), ch = ct.h * cw / ct.w; s.addImage({ data: ct.data, x: 0.68, y: 2.85, w: cw, h: ch, altText: "Tracer Study " + prodi });
-  s.addText((c.fakultas ? c.fakultas + ". " : "") + "Status kerja, masa tunggu, keselarasan, dan kompetensi alumni berdasarkan kuesioner tracer study " + VERSIONS[v].label.toLowerCase() + " (format Kemdikbud).", { x: 0.75, y: 2.95 + ch, w: 9.2, h: 0.75, fontFace: FB, fontSize: 14, color: PP.muted, margin: 0, valign: "top" });
-  let mx = 0.75; [[per ? "Periode " + per : "", true], [fmt(N) + " alumni", false], [filtTxt ? "Filter: " + filtTxt : "", false], [state.example ? "Contoh fiktif" : "", false]].filter(q => q[0]).forEach(([t, a]) => { const w = 0.45 + t.length * 0.088; s.addText(t, { shape: pptx.ShapeType.roundRect, rectRadius: 0.19, x: mx, y: 6.3, w, h: 0.4, fill: { color: a ? PP.soft2 : "FFFFFF" }, line: { color: a ? PP.line2 : PP.cardLine, width: 0.75 }, fontFace: FB, fontSize: 11, bold: true, color: a ? PP.ang : PP.ink2, align: "center", valign: "middle", margin: 0 }); mx += w + 0.15; });
+  s.addText((c.fakultas ? c.fakultas + ". " : "") + "Status kerja, masa tunggu, keselarasan, dan kompetensi alumni berdasarkan kuesioner tracer study " + VERSIONS[v].label.toLowerCase() + (A ? ", dengan lampiran kuesioner versi 2019" : "") + " (format Kemdikbud)." + (opt.noV21 ? " Tidak ada alumni kuesioner versi 2021 pada lulusan yang dipilih." : ""), { x: 0.75, y: 2.95 + ch, w: 9.2, h: 0.75, fontFace: FB, fontSize: 14, color: PP.muted, margin: 0, valign: "top" });
+  let mx = 0.75; [[per ? "Periode isi " + per : "", true], [lulTxt + (jnsTxt ? ", " + jnsTxt.toLowerCase() : ""), true], [fmt(N) + " alumni" + (A ? " versi 2021, " + fmt(A.N) + " versi 2019" : ""), false], [state.example ? "Contoh fiktif" : "", false]].filter(q => q[0]).forEach(([t, a]) => { const w = 0.45 + t.length * 0.088; s.addText(t, { shape: pptx.ShapeType.roundRect, rectRadius: 0.19, x: mx, y: 6.3, w, h: 0.4, fill: { color: a ? PP.soft2 : "FFFFFF" }, line: { color: a ? PP.line2 : PP.cardLine, width: 0.75 }, fontFace: FB, fontSize: 11, bold: true, color: a ? PP.ang : PP.ink2, align: "center", valign: "middle", margin: 0 }); mx += w + 0.15; });
   notes(s, ["Laporan ini dibuat otomatis dari Dasbor Tracer Study CARU CEDC UNPRI.", "Sumber: kuesioner tracer study " + VERSIONS[v].label.toLowerCase() + ", " + fmt(N) + " alumni" + (per ? ", periode pengisian " + per : "") + ".", filtTxt ? "Filter dasbor saat ekspor: " + filtTxt + "." : ""]);
 
   /* ---------- 2. ringkasan ---------- */
   s = base(); header(s, "Ringkasan", "Ringkasan temuan " + prodi);
-  const sumY0 = 1.75, sumH = REP.pre ? 4.15 : 4.95, sh = sumH / Math.max(REP.sum.length, 1);
-  REP.sum.forEach((t, i) => { const yy = sumY0 + i * sh;
+  const sumList = REP.sum.concat(A ? ["Lampiran di bagian akhir membahas " + fmt(A.N) + " alumni yang mengisi kuesioner versi 2019 (lulusan " + yrText(A.years) + "). Angkanya dipisah karena pertanyaan kedua kuesioner berbeda."] : []);
+  const sumY0 = 1.75, sumH = REP.pre ? 4.15 : 4.95, sh = sumH / Math.max(sumList.length, 1);
+  sumList.forEach((t, i) => { const yy = sumY0 + i * sh;
     s.addText(String(i + 1), { shape: pptx.ShapeType.roundRect, rectRadius: 0.08, x: 0.6, y: yy + 0.06, w: 0.42, h: 0.42, fill: { color: PP.soft }, line: { color: PP.line, width: 0.75 }, fontFace: FD, fontSize: 14, bold: true, color: PP.deep, align: "center", valign: "middle", margin: 0 });
     s.addText(plain(t), { x: 1.2, y: yy, w: 11.5, h: sh - 0.08, fontFace: FB, fontSize: 14, color: PP.ink2, valign: "top", margin: 0, fit: "shrink" }); });
   if (REP.pre) s.addText([{ text: "Catatan data  ", options: { bold: true } }, { text: fmt(REP.pre.n) + " dari " + fmt(REP.pre.N) + " alumni adalah " + REP.pre.lbl + ". Angka mereka menggambarkan kondisi menjelang lulus, bukan hasil tracer study satu tahun setelah lulus." }], { shape: pptx.ShapeType.roundRect, rectRadius: 0.1, x: 0.6, y: 6.05, w: 12.1, h: 0.75, fill: { color: PP.runBg }, line: { color: PP.runLine, width: 0.75 }, fontFace: FB, fontSize: 11.5, color: PP.run, valign: "middle", margin: 0.15 });
   foot(s); notes(s, ["Ringkasan dihitung otomatis dari data yang sama dengan dasbor.", REP.pre ? "Sebagian besar alumni mengisi sebelum wisuda; sampaikan ini setiap kali angka kerja dibacakan." : ""]);
 
   /* ---------- 3. angka utama ---------- */
-  s = base(); const st = REP.stats; const iku = st[3];
-  header(s, "Angka utama", st[1].v + " alumni sudah bekerja atau berwirausaha; " + (iku && /IKU 2/.test(iku.k) ? "perkiraan awal IKU 2 " : "kerja atau studi dalam 12 bulan ") + (iku ? iku.v : "-"), "Basis: " + fmt(N) + " alumni kuesioner " + VERSIONS[v].label.toLowerCase() + (filtTxt ? " (" + filtTxt + ")" : ""));
-  const kw = (12.1 - 3 * 0.25) / 4;
-  st.forEach((k, i) => { const x = 0.6 + i * (kw + 0.25), y = 2.4, h = 3.6, hl = i === 3;
+  const statCards = (s, st, y, h, cmp) => { const kw = (12.1 - 3 * 0.25) / 4;
+  if (cmp) { st.forEach((k, i) => { const x = 0.6 + i * (kw + 0.25), hl = i === 3; cardBox(s, x, y, kw, h, hl ? { fill: PP.soft2, line: PP.line2 } : {});
+      s.addText(plain(k.v), { x: x + 0.22, y: y + 0.18, w: kw - 0.44, h: 0.7, fontFace: FD, fontSize: 30, bold: true, color: hl ? PP.ang : PP.deep, margin: 0, fit: "shrink" });
+      s.addText(plain(k.k), { x: x + 0.22, y: y + 0.92, w: kw - 0.44, h: 0.5, fontFace: FB, fontSize: 12, bold: true, color: PP.ink, margin: 0, valign: "top" });
+      s.addText(plain(k.sub), { x: x + 0.22, y: y + 1.45, w: kw - 0.44, h: h - 1.55, fontFace: FB, fontSize: 9.5, color: PP.muted, margin: 0, valign: "top", fit: "shrink" }); }); return; }
+  st.forEach((k, i) => { const x = 0.6 + i * (kw + 0.25), hl = i === 3;
     cardBox(s, x, y, kw, h, hl ? { fill: PP.soft2, line: PP.line2 } : {});
     s.addText(plain(k.v), { x: x + 0.25, y: y + 0.3, w: kw - 0.5, h: 0.95, fontFace: FD, fontSize: 40, bold: true, color: hl ? PP.ang : PP.deep, margin: 0, fit: "shrink" });
     s.addText(plain(k.k), { x: x + 0.25, y: y + 1.3, w: kw - 0.5, h: 0.6, fontFace: FB, fontSize: 14, bold: true, color: PP.ink, margin: 0, valign: "top" });
@@ -2284,32 +2321,34 @@ async function buildPpt(){
       s.addShape(pptx.ShapeType.roundRect, { x: tx, y: ty, w: tw, h: 0.13, rectRadius: 0.06, fill: { color: PP.cardLine }, line: { color: PP.cardLine, width: 0 } });
       s.addShape(pptx.ShapeType.roundRect, { x: tx, y: ty, w: Math.max(0.05, tw * Math.min(100, k.track.val) / 100), h: 0.13, rectRadius: 0.06, fill: { color: hl ? PP.ang : PP.acc }, line: { color: hl ? PP.ang : PP.acc, width: 0 } });
       if (k.track.target != null) s.addShape(pptx.ShapeType.rect, { x: tx + tw * Math.min(100, k.track.target) / 100 - 0.02, y: ty - 0.07, w: 0.04, h: 0.27, fill: { color: PP.ink }, line: { color: PP.ink, width: 0 } });
-      s.addText(k.track.target != null ? "Target " + fdec(k.track.target) + "%" : "Target belum diisi", { x: tx, y: ty + 0.18, w: tw, h: 0.25, fontFace: FM, fontSize: 9, color: PP.muted, margin: 0 }); } });
+      s.addText(k.track.target != null ? "Target " + fdec(k.track.target) + "%" : "Target belum diisi", { x: tx, y: ty + 0.18, w: tw, h: 0.25, fontFace: FM, fontSize: 9, color: PP.muted, margin: 0 }); } }); };
+  s = base(); const st = REP.stats; const iku = st[3];
+  const sv = k => N < 30 ? plain(String(k.sub).split(";")[0]).replace(/ alumni$/, "") : plain(k.v);
+  header(s, "Angka utama", sv(st[1]) + " alumni sudah bekerja atau berwirausaha; " + (iku && /IKU 2/.test(iku.k) ? "perkiraan awal IKU 2: " : "kerja atau studi dalam 12 bulan: ") + (iku ? sv(iku) : "-"), "Basis: " + fmt(N) + " alumni kuesioner " + VERSIONS[v].label.toLowerCase() + " · " + lulTxt.toLowerCase() + (jnsTxt ? " · " + jnsTxt.toLowerCase() : ""));
+  statCards(s, st, 2.4, 3.6);
   if (REP.pre) s.addText("Catatan: " + fmt(REP.pre.n) + " dari " + fmt(REP.pre.N) + " alumni mengisi sebelum wisuda.", { x: 0.6, y: 6.25, w: 12.1, h: 0.35, fontFace: FB, fontSize: 11, color: PP.run, margin: 0 });
   foot(s); notes(s, st.map(k => plain(k.k) + " (" + plain(k.v) + ")\n" + backTxt(k.back)));
 
   /* ---------- 4. slide per kartu ---------- */
-  const cards = REP.cards.filter(k => k.ppt);
-  for (let i = 0; i < cards.length; i++) {
+  const slideOne = (k, eb) => { s = base();
+    header(s, eb || k.sec || "Temuan", plain(k.title), plain(k.q));
+    cardBox(s, 0.6, 2.35, 12.1, 4.45);
+    drawSpec(s, k.ppt, 0.9, 2.6, 11.5, 4.0);
+    foot(s); notes(s, [plain(k.title), plain(k.q), backTxt(k.back)]); };
+  const slidePair = (k, nx, title, eb) => { s = base();
+    header(s, eb || k.sec || "Temuan", plain(title || k.sec || k.title));
+    [k, nx].forEach((q, j) => { const x = 0.6 + j * 6.175;
+      cardBox(s, x, 1.95, 5.925, 4.85);
+      s.addText(plain(q.q), { x: x + 0.25, y: 2.1, w: 5.4, h: 0.4, fontFace: FB, fontSize: 9.5, color: PP.muted, margin: 0, fit: "shrink" });
+      s.addText(plain(q.title), { x: x + 0.25, y: 2.5, w: 5.4, h: 0.8, fontFace: FD, fontSize: 14, bold: true, color: PP.ink, margin: 0, valign: "top", fit: "shrink" });
+      drawSpec(s, q.ppt, x + 0.2, 3.35, 5.5, 3.3); });
+    foot(s); notes(s, [k, nx].map(q => plain(q.title) + "\n" + plain(q.q) + "\n" + backTxt(q.back))); };
+  const slideCards = (cards, eb) => { for (let i = 0; i < cards.length; i++) {
     const k = cards[i], nx = cards[i + 1];
     const small = q => ["bar", "col"].includes(q.ppt.t) && q.ppt.items.filter(z => z && z.label != null).length <= 7;
-    const pair = !k.wide && nx && !nx.wide && nx.sec === k.sec && small(k) && small(nx);
-    s = base();
-    if (!pair) {
-      header(s, k.sec || "Temuan", plain(k.title), plain(k.q));
-      cardBox(s, 0.6, 2.35, 12.1, 4.45);
-      drawSpec(s, k.ppt, 0.9, 2.6, 11.5, 4.0);
-      foot(s); notes(s, [plain(k.title), plain(k.q), backTxt(k.back)]);
-    } else {
-      header(s, k.sec || "Temuan", plain(k.sec || k.title));
-      [k, nx].forEach((q, j) => { const x = 0.6 + j * 6.175;
-        cardBox(s, x, 1.95, 5.925, 4.85);
-        s.addText(plain(q.q), { x: x + 0.25, y: 2.1, w: 5.4, h: 0.4, fontFace: FB, fontSize: 9.5, color: PP.muted, margin: 0, fit: "shrink" });
-        s.addText(plain(q.title), { x: x + 0.25, y: 2.5, w: 5.4, h: 0.8, fontFace: FD, fontSize: 14, bold: true, color: PP.ink, margin: 0, valign: "top", fit: "shrink" });
-        drawSpec(s, q.ppt, x + 0.2, 3.35, 5.5, 3.3); });
-      foot(s); notes(s, [k, nx].map(q => plain(q.title) + "\n" + plain(q.q) + "\n" + backTxt(q.back))); i++;
-    }
-  }
+    if (!k.wide && nx && !nx.wide && nx.sec === k.sec && small(k) && small(nx)) { slidePair(k, nx, null, eb); i++; } else slideOne(k, eb); } };
+  const NOTE19 = ["Lampiran versi 2019", "Memakai filter tahun lulus yang sama dengan laporan utama. Status kerja diambil dari F8 dan F9, masa tunggu dari F5, dan kompetensi memakai butir versi 2019, sehingga angkanya tidak digabung dengan versi 2021."];
+  slideCards(REP.cards.filter(k => k.ppt).map(k => A && k.ppt.t === "method" ? Object.assign({}, k, { ppt: Object.assign({}, k.ppt, { items: k.ppt.items.concat([NOTE19]) }) }) : k));
 
   /* ---------- 5. tindak lanjut ---------- */
   s = base(); header(s, "Tindak lanjut", "Rencana tindak lanjut " + prodi, "Diisi oleh pimpinan fakultas atau prodi berdasarkan temuan pada slide sebelumnya.");
@@ -2320,7 +2359,40 @@ async function buildPpt(){
     s.addText(d, { x: x + 0.25, y: 3.75, w: 3.4, h: 0.8, fontFace: FB, fontSize: 11, color: PP.muted, margin: 0, valign: "top" }); });
   foot(s);
 
-  /* ---------- 6. closing ---------- */
+  /* ---------- 6. lampiran kuesioner versi 2019 ---------- */
+  if (A) {
+    const EB = "Lampiran versi 2019", ak = key => A.cards.find(k => k.key === key && k.ppt);
+    s = base();
+    pill(s, "Lampiran", 0.6, 0.75);
+    s.addText("Kuesioner versi 2019", { x: 0.6, y: 1.25, w: 12.1, h: 0.9, fontFace: FD, fontSize: 36, bold: true, color: PP.deep, margin: 0 });
+    s.addText("Sebagian alumni mengisi kuesioner tracer study versi 2019. Pertanyaannya berbeda dari versi 2021, sehingga angkanya disajikan terpisah di bagian ini dan tidak digabung dengan temuan utama.", { x: 0.6, y: 2.2, w: 10.5, h: 0.8, fontFace: FB, fontSize: 14, color: PP.ink2, margin: 0, valign: "top" });
+    [[fmt(A.N) + " alumni", "mengisi kuesioner versi 2019 pada filter ini"], ["Lulusan " + yrText(A.years), "tahun lulus responden versi 2019"], A.outL ? [fmt(A.outL) + " alumni", "tidak ada di daftar pengisian periode ini; kemungkinan mengisi sebelum periode dimulai"] : ["Semua", "ada di daftar pengisian periode ini"]].forEach(([a, b], j) => { const x = 0.6 + j * 4.1;
+      cardBox(s, x, 3.3, 3.9, 1.45);
+      s.addText(a, { x: x + 0.25, y: 3.45, w: 3.4, h: 0.6, fontFace: FD, fontSize: 22, bold: true, color: j === 2 && A.outL ? PP.ang : PP.deep, margin: 0, fit: "shrink" });
+      s.addText(b, { x: x + 0.25, y: 4.05, w: 3.4, h: 0.6, fontFace: FB, fontSize: 11, color: PP.muted, margin: 0, valign: "top" }); });
+    s.addText([{ text: "Cara membaca  ", options: { bold: true, color: PP.deep } }, { text: "Filter tahun lulus sama dengan laporan utama (" + lulTxt.toLowerCase() + "). " + (A.N < 30 ? "Jumlah alumni di bawah 30 orang, jadi judul memakai jumlah orang, bukan persen, dan lampiran hanya memuat topik utama. " : "") + "Rincian lengkap ada di dasbor tab Versi 2019 dan di Excel kompilasi." }], { shape: pptx.ShapeType.roundRect, rectRadius: 0.1, x: 0.6, y: 5.15, w: 12.1, h: 0.95, fill: { color: PP.soft }, line: { color: PP.line, width: 0.75 }, fontFace: FB, fontSize: 12, color: PP.ink2, valign: "middle", margin: 0.18 });
+    foot(s); notes(s, ["Lampiran ini memuat alumni yang mengisi kuesioner versi 2019.", A.outL ? A.outL + " alumni tidak ada di daftar pengisian periode tarikan; mereka tetap dihitung." : ""]);
+    // angka utama versi 2019 dan perbandingan dengan versi 2021
+    s = base(); const sa = A.stats;
+    header(s, EB, "Angka utama versi 2019: " + (A.N < 30 ? plain(String(sa[1].sub).split(";")[0]).replace(/ alumni$/, "") : plain(sa[1].v)) + " alumni bekerja atau berwirausaha", "Basis: " + fmt(A.N) + " alumni kuesioner versi 2019 · " + lulTxt.toLowerCase());
+    const cmp = REP.v === "v2021";
+    statCards(s, sa, 2.35, cmp ? 2.2 : 3.6, cmp);
+    if (cmp) { const pick = k => plain(k.v) + "\n" + plain(String(k.sub).split(";")[0]);
+      const head = ["Indikator", "Versi 2021", "Versi 2019", "Perbedaan cara bertanya"].map(t => ({ text: t, options: { bold: true, color: PP.deep, fill: { color: PP.soft }, fontSize: 10 } }));
+      const rows = [[1, "Bekerja atau berwirausaha", "2021: status F8 Bekerja atau Wiraswasta. 2019: F8 bekerja Ya."], [2, "Kerja dalam 6 bulan, dari yang bekerja", "2021: F504 Ya. 2019: F5 sebelum lulus, atau jumlah bulan 6 atau kurang."], [3, "Kerja atau studi dalam 12 bulan", "Cara hitung sama; studi lanjut versi 2019 diambil dari F9."]]
+        .map(([i, l, d]) => [l, pick(REP.stats[i]), pick(sa[i]), d].map((t, k) => ({ text: t, options: { fontSize: 10, color: k === 3 ? PP.muted : PP.ink2, bold: k === 1 || k === 2, valign: "middle" } })));
+      s.addTable([head].concat(rows), { x: 0.6, y: 4.75, w: 12.1, colW: [3.0, 2.0, 2.0, 5.1], fontFace: FB, border: { type: "solid", pt: 0.5, color: PP.cardLine }, rowH: 0.42, autoPage: false }); }
+    foot(s); notes(s, sa.map(k => plain(k.k) + " (" + plain(k.v) + ")\n" + backTxt(k.back)));
+    if (A.N >= 30) slideCards(A.cards.filter(k => k.ppt && !["facts", "method"].includes(k.ppt.t)), EB);
+    else {
+      const inc = ak("income"); if (inc) slideOne(Object.assign({}, inc, { q: inc.q + (A.weighted != null ? " · IKU 2 dengan bobot gaji resmi: " + fdec(A.weighted) + "%" : "") }), EB);
+      const a14 = ak("f14"), a15 = ak("f15"); if (a14 && a15) slidePair(a14, a15, "Keselarasan pekerjaan dengan bidang dan jenjang studi", EB); else [a14, a15].filter(Boolean).forEach(k => slideOne(k, EB));
+      const dm = ak("dumb"); if (dm) slideOne(Object.assign({}, dm, { q: "Lima selisih terbesar dari " + dm.ppt.pts.length + " kompetensi versi 2019 · " + fmt(A.N) + " alumni", ppt: Object.assign({}, dm.ppt, { pts: dm.ppt.pts.slice(0, 5) }) }), EB);
+      const aj = ak("jalur"), at = ak("f11"); if (aj && at) slidePair(aj, at, "Jalur mencari kerja dan tempat kerja", EB); else [aj, at].filter(Boolean).forEach(k => slideOne(k, EB));
+    }
+  }
+
+  /* ---------- 7. closing ---------- */
   s = pptx.addSlide(); page++; s.background = { color: PP.deep };
   // motif latar: batang naik seperti grafik capaian, warna ungu terang tembus pandang
   [[9.0, 3.3, 1.7], [10.05, 2.5, 2.5], [11.1, 1.6, 3.4], [12.15, 0.6, 4.4]].forEach(([bx, by, bh], k) => s.addShape(pptx.ShapeType.roundRect, { x: bx, y: by, w: 0.8, h: bh, rectRadius: 0.12, fill: { color: k === 3 ? PP.angL : PP.light, transparency: k === 3 ? 72 : 82 }, line: { color: PP.light, width: 0, transparency: 100 } }));
@@ -2332,7 +2404,7 @@ async function buildPpt(){
     s.addShape(pptx.ShapeType.roundRect, { x, y: 5.55, w: 3.8, h: 1.0, rectRadius: 0.12, fill: { color: "FFFFFF" }, line: { color: "FFFFFF", width: 0.75 } });
     s.addText([{ text: a, options: { fontFace: FM, fontSize: 9.5, bold: true, color: PP.ang, breakLine: true } }, { text: b, options: { fontFace: FB, fontSize: 13, bold: true, color: PP.ink } }], { x: x + 0.22, y: 5.6, w: 3.4, h: 0.9, margin: 0, valign: "middle", fit: "shrink" }); });
 
-  return { pptx, name: pptFileName(c, v) };
+  return { pptx, name: pptFileName(c, f) };
 }
 renderFiles();
 </script>
