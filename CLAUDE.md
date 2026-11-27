@@ -35,7 +35,9 @@ tests/  docs/
 
 ## Catatan khusus
 - File ini mengolah data pribadi alumni (UU 27/2022 tentang Pelindungan Data Pribadi). Jangan menyimpan data alumni ke `localStorage`, server, atau layanan pihak ketiga. `localStorage` hanya untuk pengaturan tampilan.
-- Langkah berikutnya: ubah ke ES modules dengan `import`/`export`, lalu pasang Content Security Policy. Uji perubahan dengan membandingkan tampilan contoh fiktif sebelum dan sesudah.
+- Content Security Policy dipasang lewat tag meta di `index.html`. Sumber luar yang diizinkan hanya jsDelivr (pustaka dan mesin OCR) dan Google Fonts. Bila menambah sumber luar baru, perbarui CSP lalu uji Excel, PPT, dan OCR di browser.
+- File data (`kamus.js`, `versi.js`, `logo.js`) wajib dimuat paling awal, karena kode di file lain memakainya, termasuk lewat `setTimeout`.
+- Langkah berikutnya: ubah ke ES modules dengan `import`/`export`. Uji perubahan dengan membandingkan tampilan contoh fiktif sebelum dan sesudah.
 
 ## Aturan wajib
 
