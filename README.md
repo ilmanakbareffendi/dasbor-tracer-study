@@ -10,7 +10,7 @@ Alamat: https://ilmanakbareffendi.github.io/dasbor-tracer-study/
 3. Klik **Unduh Excel kompilasi** untuk memperoleh data per alumni yang sudah diterjemahkan, lengkap dengan sheet Baca Dulu.
 
 ## Keamanan data
-Semua pengolahan terjadi di browser pengguna. File yang diunggah tidak dikirim atau disimpan di server mana pun, dan halaman ini tidak memuat data alumni.
+Semua pengolahan terjadi di browser pengguna. File yang diunggah tidak dikirim atau disimpan di server mana pun, dan halaman ini tidak memuat data alumni. Rincian data pribadi yang diolah, keluaran, dan kewajiban pengguna ada di [docs/DATA.md](docs/DATA.md).
 
 ## Menjalankan di komputer sendiri
 1. Unduh atau clone repo ini.
