@@ -1,0 +1,20 @@
+# Sistem operasi dan editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependensi dan hasil build
+node_modules/
+dist/
+
+# Rahasia: jangan pernah masuk repo
+.env
+.env.*
+*.pem
+*.key
+
+# Log dan file sementara
+*.log
+supabase/.temp/
+supabase/.branches/
