@@ -628,8 +628,8 @@ footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--lin
   <footer>Kuesioner mengikuti instrumen tracer study Kemdikbud versi 2021 dan versi 2019 yang dipakai sistem internal UNPRI. Indikasi IKU 2 mengacu Kepmendiktisaintek 358/M/KEP/2025 dan bukan capaian resmi, karena IKU 2 diukur 1 tahun setelah lulus. Arti setiap kode tercantum di sheet Panduan Kode pada Excel kompilasi.</footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" integrity="sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz" crossorigin="anonymous"></script>
 <script>
 "use strict";
 /* ================= KAMUS KODE BERSAMA ================= */
@@ -2107,7 +2107,7 @@ const LOGO_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAAEwCAYAAACa
 // lengkap dengan hasil cek, pesan WhatsApp, dan satu baris log untuk Google Sheet.
 const LOG_SHEET = "https://docs.google.com/spreadsheets/d/10MbPnIJZfT61aFiuvfGPrR9iTfjhEVHfOyuBLptzrQQ/edit";
 const WEB_LINK = "https://ilmanakbareffendi.github.io/dasbor-tracer-study/";
-const OCR_CDN = { lib: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js", worker: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js", core: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1", lang: "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int" };
+const OCR_CDN = { lib: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js", libIntegrity: "sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F", worker: "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js", core: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1", lang: "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int" };
 const BULAN_PANJANG = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 const PK = { v21: null, v19: null, daftar: null, shots: [], ocr: { status: "", fields: {}, notes: [] }, result: null };
 const pkF = { prodiLayar: "", tahunMasuk: "", tahapan: "", dari: "", sampai: "", total: "", n21: "", n19: "", tarik: new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10) };
@@ -2144,7 +2144,7 @@ let pkWorker = null;
 async function pkOcr(){
   PK.ocr.status = "Membaca screenshot. Pertama kali perlu mengunduh mesin pembaca teks (sekitar 5 MB)."; pkRender();
   try {
-    if (!window.Tesseract) await loadScript(OCR_CDN.lib);
+    if (!window.Tesseract) await loadScript(OCR_CDN.lib, OCR_CDN.libIntegrity);
     if (!pkWorker) pkWorker = await Tesseract.createWorker("eng", 1, { workerPath: OCR_CDN.worker, corePath: OCR_CDN.core, langPath: OCR_CDN.lang });
     const texts = [];
     for (let i = 0; i < PK.shots.length; i++) { PK.ocr.status = "Membaca screenshot " + (i + 1) + " dari " + PK.shots.length + "."; pkRender(); const { data } = await pkWorker.recognize(PK.shots[i]); texts.push(data.text); }
@@ -2325,7 +2325,7 @@ const colOf = c => { if (!c) return null; if (PCOL[c]) return PCOL[c]; const h =
 const FD = "Plus Jakarta Sans", FB = "Manrope", FM = "IBM Plex Mono";
 const SH = { type: "outer", color: "16112A", opacity: 0.13, blur: 8, offset: 2, angle: 90 };
 const plain = h => { const d = document.createElement("div"); d.innerHTML = String(h == null ? "" : h).replace(/<span class="tag-pre">([^<]*)<\/span>/g, " ($1)"); return d.textContent.replace(/\s+/g, " ").trim(); };
-function loadScript(src){ return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => no(new Error("Pustaka PowerPoint gagal dimuat. Periksa koneksi internet lalu coba lagi.")); document.head.appendChild(s); }); }
+function loadScript(src, integrity){ return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; if (integrity) { s.integrity = integrity; s.crossOrigin = "anonymous"; } s.onload = ok; s.onerror = () => no(new Error("Pustaka pendukung gagal dimuat. Periksa koneksi internet lalu coba lagi.")); document.head.appendChild(s); }); }
 async function gradText(text, from, to, px, maxW){
   try { await document.fonts.load("800 " + px + 'px "Plus Jakarta Sans"'); } catch (e) {}
   const scale = 2, font = "800 " + px * scale + 'px "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif';
@@ -2351,7 +2351,7 @@ function pptFileName(c, f){
 }
 // R = hasil dasbor kuesioner utama (versi 2021 bila ada), A = hasil versi 2019 untuk lampiran (boleh null)
 async function buildPpt(R, A, opt){
-  if (!window.PptxGenJS) await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js");
+  if (!window.PptxGenJS) await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js", "sha384-Cck14aA9cifjYolcnjebXRfWGkz5ltHMBiG4px/j8GS+xQcb7OhNQWZYyWjQ+UwQ");
   opt = opt || {}; const REP = R;
   if (!REP) throw new Error("Tidak ada alumni pada filter ini.");
   const c = state.compiled, v = REP.v, prodi = prodiShortOf(c), per = c.period ? periodText(c.period) : "", N = REP.N;
