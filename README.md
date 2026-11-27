@@ -18,7 +18,14 @@ Semua pengolahan terjadi di browser pengguna. File yang diunggah tidak dikirim a
 3. Buka `http://localhost:8000`.
 
 ## Struktur
-- `index.html`: seluruh aplikasi dalam satu file. Pemecahan ke modul dijadwalkan sesuai Standar Pengembangan Web CEDC UNPRI.
+- `index.html`: markup halaman saja (sekitar 280 baris).
+- `assets/css/`: `base.css` (tata letak, unggah, filter) dan `dasbor.css` (dasbor, kartu, bilah atas).
+- `assets/js/data/`: kamus kode kuesioner dan kabupaten/kota (`kamus.js`), daftar kolom per versi (`versi.js`), logo base64 untuk Excel dan PPT (`logo.js`).
+- `assets/js/utils/utils.js`: fungsi umum, termasuk `esc()` dan `$()`.
+- `assets/js/core/`: logika tanpa tampilan (relevansi, spesifikasi kolom Excel, model terpadu, state, kompilasi, mesin anomali).
+- `assets/js/features/`: baca file, grafik, dasbor, Excel kompilasi, contoh fiktif, alur, bilah atas, paket CARU, PPT.
+- `assets/js/main.js`: titik masuk.
+- `assets/vendor/`: SheetJS 0.20.3.
 - `CLAUDE.md`: aturan kerja untuk alat AI dan programmer.
 - `CHANGELOG.md`: catatan perubahan.
 

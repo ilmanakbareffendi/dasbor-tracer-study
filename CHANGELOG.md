@@ -4,6 +4,9 @@ Semua perubahan penting pada project ini dicatat di sini. Format mengikuti [Keep
 
 ## [Belum dirilis]
 
+### Diubah
+- Kode dipecah dari satu `index.html` (2.630 baris) menjadi 2 file CSS dan 20 file JavaScript menurut fungsinya. Tidak ada file di atas 330 baris. Tampilan dan perilaku tidak berubah: diuji dengan membandingkan halaman awal, contoh fiktif, tab, filter, dan menu CARU sebelum dan sesudah.
+
 ### Keamanan
 - SheetJS diperbarui dari 0.18.5 ke 0.20.3 dan disimpan di `assets/vendor/`. Versi lama rentan *prototype pollution* saat membaca file (CVE-2023-30533).
 - Semua pustaka dari CDN (ExcelJS, Tesseract.js, PptxGenJS) kini memakai atribut `integrity` dan `crossorigin`.
