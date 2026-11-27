@@ -57,4 +57,4 @@ Teks antarmuka dan dokumentasi memakai bahasa Indonesia. Jangan memakai tanda pi
 ## Perintah
 
 - Jalankan lokal: `python3 -m http.server 8000`, lalu buka `http://localhost:8000`
-- Pengujian (bila ada): `node --test tests/`
+- Pengujian (bila ada): `node --test` (menjalankan semua file `tests/*.test.js`)
