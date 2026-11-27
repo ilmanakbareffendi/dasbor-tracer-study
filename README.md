@@ -12,5 +12,27 @@ Alamat: https://ilmanakbareffendi.github.io/dasbor-tracer-study/
 ## Keamanan data
 Semua pengolahan terjadi di browser pengguna. File yang diunggah tidak dikirim atau disimpan di server mana pun, dan halaman ini tidak memuat data alumni.
 
-## Isi repo
-- `index.html`: seluruh web app dalam satu file. Pustaka SheetJS 0.18.5 dan ExcelJS 4.4.0 dimuat dari jsDelivr.
+## Menjalankan di komputer sendiri
+1. Unduh atau clone repo ini.
+2. Di folder repo, jalankan `python3 -m http.server 8000`.
+3. Buka `http://localhost:8000`.
+
+## Struktur
+- `index.html`: seluruh aplikasi dalam satu file. Pemecahan ke modul dijadwalkan sesuai Standar Pengembangan Web CEDC UNPRI.
+- `CLAUDE.md`: aturan kerja untuk alat AI dan programmer.
+- `CHANGELOG.md`: catatan perubahan.
+
+## Layanan dan pustaka pihak ketiga
+| Pustaka | Versi | Sumber | Fungsi |
+|---|---|---|---|
+| SheetJS (xlsx) | 0.20.3 | cdn.sheetjs.com | Membaca file tarikan dan menulis file paket |
+| ExcelJS | 4.4.0 | jsDelivr | Menulis Excel kompilasi |
+| Tesseract.js | 5.1.1 | jsDelivr | Membaca teks dari screenshot (fitur paket CARU) |
+| PptxGenJS | 3.12.0 | jsDelivr | Membuat laporan PPT |
+
+Setiap pustaka dimuat dengan atribut `integrity` (Subresource Integrity), sehingga browser menolak file yang isinya berubah.
+
+## Pemilik dan kontak
+Career and Alumni Relations Unit, Pusat Pengembangan Karir dan Kewirausahaan (CEDC) UNPRI. Kontak: ilmanakbareffendi@unprimdn.ac.id.
+
+Status hak cipta dan lisensi akan dicantumkan di file `LICENSE` setelah ditetapkan.
