@@ -4,6 +4,12 @@ Semua perubahan penting pada project ini dicatat di sini. Format mengikuti [Keep
 
 ## [Belum dirilis]
 
+### Keamanan
+- Content Security Policy: halaman hanya boleh memuat skrip dari repo sendiri dan jsDelivr, huruf dari Google Fonts, dan tidak boleh mengirim data ke server lain.
+
+### Diperbaiki
+- `logo.js` kini dimuat bersama file data lain di awal. Sebelumnya logo di header bisa gagal tampil pada koneksi lambat karena kode pemasangnya berjalan sebelum file logo selesai dimuat.
+
 ## [1.0.0] - 2026-11-27
 
 Versi pertama yang memenuhi Standar Pengembangan Web CEDC UNPRI v1.0.
