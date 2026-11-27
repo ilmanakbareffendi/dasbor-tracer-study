@@ -5,8 +5,8 @@ Semua perubahan penting pada project ini dicatat di sini. Format mengikuti [Keep
 ## [Belum dirilis]
 
 ### Keamanan
-- SheetJS diperbarui dari 0.18.5 ke 0.20.3 dan dimuat dari sumber resmi cdn.sheetjs.com. Versi lama rentan *prototype pollution* saat membaca file (CVE-2023-30533).
-- Semua pustaka dari CDN kini memakai atribut `integrity` dan `crossorigin`, termasuk Tesseract.js dan PptxGenJS yang dimuat saat dibutuhkan.
+- SheetJS diperbarui dari 0.18.5 ke 0.20.3 dan disimpan di `assets/vendor/`. Versi lama rentan *prototype pollution* saat membaca file (CVE-2023-30533).
+- Semua pustaka dari CDN (ExcelJS, Tesseract.js, PptxGenJS) kini memakai atribut `integrity` dan `crossorigin`.
 
 ### Diubah
 - Pesan galat saat pustaka gagal dimuat kini umum, tidak hanya menyebut PowerPoint.

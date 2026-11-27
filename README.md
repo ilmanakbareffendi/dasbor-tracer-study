@@ -25,12 +25,12 @@ Semua pengolahan terjadi di browser pengguna. File yang diunggah tidak dikirim a
 ## Layanan dan pustaka pihak ketiga
 | Pustaka | Versi | Sumber | Fungsi |
 |---|---|---|---|
-| SheetJS (xlsx) | 0.20.3 | cdn.sheetjs.com | Membaca file tarikan dan menulis file paket |
+| SheetJS (xlsx) | 0.20.3 | `assets/vendor/` (salinan di repo) | Membaca file tarikan dan menulis file paket |
 | ExcelJS | 4.4.0 | jsDelivr | Menulis Excel kompilasi |
 | Tesseract.js | 5.1.1 | jsDelivr | Membaca teks dari screenshot (fitur paket CARU) |
 | PptxGenJS | 3.12.0 | jsDelivr | Membuat laporan PPT |
 
-Setiap pustaka dimuat dengan atribut `integrity` (Subresource Integrity), sehingga browser menolak file yang isinya berubah.
+SheetJS disimpan langsung di repo karena versi aman tidak tersedia di npm resmi. Pustaka lain dimuat dari jsDelivr dengan atribut `integrity` (Subresource Integrity), sehingga browser menolak file yang isinya berubah.
 
 ## Pemilik dan kontak
 Career and Alumni Relations Unit, Pusat Pengembangan Karir dan Kewirausahaan (CEDC) UNPRI. Kontak: ilmanakbareffendi@unprimdn.ac.id.

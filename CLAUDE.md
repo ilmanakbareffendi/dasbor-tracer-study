@@ -7,7 +7,7 @@ Acuan: Standar Pengembangan Web CEDC UNPRI v1.0.
 
 ## Struktur saat ini
 - `index.html`: seluruh aplikasi dalam satu file, sekitar 2.630 baris (CSS sekitar 370 baris, JavaScript sekitar 2.000 baris). Tabel kode kabupaten/kota dan logo base64 masih tertanam di file ini.
-- Pustaka luar dimuat dari CDN dengan `integrity`: SheetJS 0.20.3 (cdn.sheetjs.com), ExcelJS 4.4.0, Tesseract.js 5.1.1, PptxGenJS 3.12.0 (jsDelivr).
+- SheetJS 0.20.3 disalin ke `assets/vendor/` (salinan dari paket npm @e965/xlsx, karena versi aman tidak ada di npm resmi). ExcelJS 4.4.0, Tesseract.js 5.1.1, dan PptxGenJS 3.12.0 dimuat dari jsDelivr dengan `integrity`.
 - Fungsi `esc()` dipakai untuk semua data dari file sebelum disusun sebagai HTML. Pertahankan.
 
 ## Struktur target (Standar Pengembangan Web CEDC UNPRI v1.0)
