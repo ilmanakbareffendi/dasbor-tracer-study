@@ -6,7 +6,15 @@ Pemilik: Career and Alumni Relations Unit, Pusat Pengembangan Karir dan Kewiraus
 Acuan: Standar Pengembangan Web CEDC UNPRI v1.0.
 
 ## Struktur saat ini
-- `index.html`: seluruh aplikasi dalam satu file, sekitar 2.630 baris (CSS sekitar 370 baris, JavaScript sekitar 2.000 baris). Tabel kode kabupaten/kota dan logo base64 masih tertanam di file ini.
+- `index.html`: markup halaman saja (sekitar 280 baris).
+- `assets/css/`: `base.css` (tata letak, unggah, filter) dan `dasbor.css` (dasbor, kartu, bilah atas).
+- `assets/js/data/`: kamus kode kuesioner dan kabupaten/kota (`kamus.js`), daftar kolom per versi (`versi.js`), logo base64 untuk Excel dan PPT (`logo.js`).
+- `assets/js/utils/utils.js`: fungsi umum, termasuk `esc()` dan `$()`.
+- `assets/js/core/`: logika tanpa tampilan (relevansi, spesifikasi kolom Excel, model terpadu, state, kompilasi, mesin anomali).
+- `assets/js/features/`: baca file, grafik, dasbor, Excel kompilasi, contoh fiktif, alur, bilah atas, paket CARU, PPT.
+- `assets/js/main.js`: titik masuk.
+- `assets/vendor/`: SheetJS 0.20.3.
+- Semua file JavaScript adalah skrip klasik yang dimuat berurutan di akhir `index.html` dan berbagi nama global. Urutan tag `<script>` penting: file data dan utils lebih dulu, `main.js` terakhir. File baru ditambahkan sesuai urutan ketergantungannya.
 - SheetJS 0.20.3 disalin ke `assets/vendor/` (salinan dari paket npm @e965/xlsx, karena versi aman tidak ada di npm resmi). ExcelJS 4.4.0, Tesseract.js 5.1.1, dan PptxGenJS 3.12.0 dimuat dari jsDelivr dengan `integrity`.
 - Fungsi `esc()` dipakai untuk semua data dari file sebelum disusun sebagai HTML. Pertahankan.
 
@@ -27,7 +35,7 @@ tests/  docs/
 
 ## Catatan khusus
 - File ini mengolah data pribadi alumni (UU 27/2022 tentang Pelindungan Data Pribadi). Jangan menyimpan data alumni ke `localStorage`, server, atau layanan pihak ketiga. `localStorage` hanya untuk pengaturan tampilan.
-- Refactor ke struktur target dilakukan bertahap, satu bagian per sesi, tanpa mengubah perilaku.
+- Langkah berikutnya: ubah ke ES modules dengan `import`/`export`, lalu pasang Content Security Policy. Uji perubahan dengan membandingkan tampilan contoh fiktif sebelum dan sesudah.
 
 ## Aturan wajib
 
